@@ -1,0 +1,1094 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>yeastr.py39unparser &#8212; yeastr 0.0.2 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=c43d8ed7" />
+    <script src="../../_static/documentation_options.js?v=e3a6060d"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for yeastr.py39unparser</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Copy of python3.9 unparser for execution with python3.8 ast</span>
+
+<span class="sd">Copypasted and patched by castix</span>
+
+<span class="sd">    :copyright: Copyright 2008 by Armin Ronacher.</span>
+<span class="sd">    :license: Python License.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ast</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sys</span><span class="w"> </span><span class="kn">import</span> <span class="n">float_info</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">contextlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">contextmanager</span><span class="p">,</span> <span class="n">nullcontext</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">enum</span><span class="w"> </span><span class="kn">import</span> <span class="n">IntEnum</span><span class="p">,</span> <span class="n">auto</span>
+
+<span class="c1"># Large float and imaginary literals get turned into infinities in the AST.</span>
+<span class="c1"># We unparse those infinities to INFSTR.</span>
+<span class="n">_INFSTR</span> <span class="o">=</span> <span class="s2">&quot;1e&quot;</span> <span class="o">+</span> <span class="nb">repr</span><span class="p">(</span><span class="n">float_info</span><span class="o">.</span><span class="n">max_10_exp</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">_Precedence</span><span class="p">(</span><span class="n">IntEnum</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Precedence table that originated from python grammar.&quot;&quot;&quot;</span>
+
+    <span class="n">TUPLE</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>
+    <span class="n">YIELD</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>           <span class="c1"># &#39;yield&#39;, &#39;yield from&#39;</span>
+    <span class="n">TEST</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>            <span class="c1"># &#39;if&#39;-&#39;else&#39;, &#39;lambda&#39;</span>
+    <span class="n">OR</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>              <span class="c1"># &#39;or&#39;</span>
+    <span class="n">AND</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>             <span class="c1"># &#39;and&#39;</span>
+    <span class="n">NOT</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>             <span class="c1"># &#39;not&#39;</span>
+    <span class="n">CMP</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>             <span class="c1"># &#39;&lt;&#39;, &#39;&gt;&#39;, &#39;==&#39;, &#39;&gt;=&#39;, &#39;&lt;=&#39;, &#39;!=&#39;,</span>
+                             <span class="c1"># &#39;in&#39;, &#39;not in&#39;, &#39;is&#39;, &#39;is not&#39;</span>
+    <span class="n">EXPR</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>
+    <span class="n">BOR</span> <span class="o">=</span> <span class="n">EXPR</span>               <span class="c1"># &#39;|&#39;</span>
+    <span class="n">BXOR</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>            <span class="c1"># &#39;^&#39;</span>
+    <span class="n">BAND</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>            <span class="c1"># &#39;&amp;&#39;</span>
+    <span class="n">SHIFT</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>           <span class="c1"># &#39;&lt;&lt;&#39;, &#39;&gt;&gt;&#39;</span>
+    <span class="n">ARITH</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>           <span class="c1"># &#39;+&#39;, &#39;-&#39;</span>
+    <span class="n">TERM</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>            <span class="c1"># &#39;*&#39;, &#39;@&#39;, &#39;/&#39;, &#39;%&#39;, &#39;//&#39;</span>
+    <span class="n">FACTOR</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>          <span class="c1"># unary &#39;+&#39;, &#39;-&#39;, &#39;~&#39;</span>
+    <span class="n">POWER</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>           <span class="c1"># &#39;**&#39;</span>
+    <span class="n">AWAIT</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>           <span class="c1"># &#39;await&#39;</span>
+    <span class="n">ATOM</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">next</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">(</span><span class="bp">self</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span>
+
+<span class="n">_SINGLE_QUOTES</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;&#39;&quot;</span><span class="p">,</span> <span class="s1">&#39;&quot;&#39;</span><span class="p">)</span>
+<span class="n">_MULTI_QUOTES</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;&quot;&quot;&quot;&#39;</span><span class="p">,</span> <span class="s2">&quot;&#39;&#39;&#39;&quot;</span><span class="p">)</span>
+<span class="n">_ALL_QUOTES</span> <span class="o">=</span> <span class="p">(</span><span class="o">*</span><span class="n">_SINGLE_QUOTES</span><span class="p">,</span> <span class="o">*</span><span class="n">_MULTI_QUOTES</span><span class="p">)</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">_Unparser</span><span class="p">(</span><span class="n">NodeVisitor</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Methods in this class recursively traverse an AST and</span>
+<span class="sd">    output source code for the abstract syntax; original formatting</span>
+<span class="sd">    is disregarded.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">_avoid_backslashes</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_source</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_buffer</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_precedences</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_type_ignores</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_indent</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_avoid_backslashes</span> <span class="o">=</span> <span class="n">_avoid_backslashes</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">interleave</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inter</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">seq</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Call f on each item in seq, calling inter() in between.&quot;&quot;&quot;</span>
+        <span class="n">seq</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">(</span><span class="n">seq</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">f</span><span class="p">(</span><span class="nb">next</span><span class="p">(</span><span class="n">seq</span><span class="p">))</span>
+        <span class="k">except</span> <span class="ne">StopIteration</span><span class="p">:</span>
+            <span class="k">pass</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">seq</span><span class="p">:</span>
+                <span class="n">inter</span><span class="p">()</span>
+                <span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">items_view</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">traverser</span><span class="p">,</span> <span class="n">items</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Traverse and separate the given *items* with a comma and append it to</span>
+<span class="sd">        the buffer. If *items* is a single item sequence, a trailing comma</span>
+<span class="sd">        will be added.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">items</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">traverser</span><span class="p">(</span><span class="n">items</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">interleave</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;, &quot;</span><span class="p">),</span> <span class="n">traverser</span><span class="p">,</span> <span class="n">items</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">maybe_newline</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Adds a newline if it isn&#39;t the start of generated source&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_source</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">fill</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Indent a piece of text and append it, according to the current</span>
+<span class="sd">        indentation level&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">maybe_newline</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;    &quot;</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_indent</span> <span class="o">+</span> <span class="n">text</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">write</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Append a piece of text&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_source</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">buffer_writer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_buffer</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">buffer</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_buffer</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_buffer</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">value</span>
+
+    <span class="nd">@contextmanager</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">block</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">extra</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;A context manager for preparing the source for blocks. It adds</span>
+<span class="sd">        the character&#39;:&#39;, increases the indentation on enter and decreases</span>
+<span class="sd">        the indentation on exit. If *extra* is given, it will be directly</span>
+<span class="sd">        appended after the colon character.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;:&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">extra</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">extra</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_indent</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">yield</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_indent</span> <span class="o">-=</span> <span class="mi">1</span>
+
+    <span class="nd">@contextmanager</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">delimit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;A context manager for preparing the source for expressions. It adds</span>
+<span class="sd">        *start* to the buffer and enters, after exit it adds *end*.&quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">start</span><span class="p">)</span>
+        <span class="k">yield</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">end</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">delimit_if</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="n">condition</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">condition</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">delimit</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">nullcontext</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">require_parens</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">precedence</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Shortcut to adding precedence related parens&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">delimit_if</span><span class="p">(</span><span class="s2">&quot;(&quot;</span><span class="p">,</span> <span class="s2">&quot;)&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_precedence</span><span class="p">(</span><span class="n">node</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">precedence</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_precedence</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_precedences</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">_Precedence</span><span class="o">.</span><span class="n">TEST</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_precedence</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">precedence</span><span class="p">,</span> <span class="o">*</span><span class="n">nodes</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">nodes</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_precedences</span><span class="p">[</span><span class="n">node</span><span class="p">]</span> <span class="o">=</span> <span class="n">precedence</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_raw_docstring</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;If a docstring node is found in the body of the *node* parameter,</span>
+<span class="sd">        return that docstring node, None otherwise.</span>
+
+<span class="sd">        Logic mirrored from ``_PyAST_GetDocString``.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span>
+            <span class="n">node</span><span class="p">,</span> <span class="p">(</span><span class="n">AsyncFunctionDef</span><span class="p">,</span> <span class="n">FunctionDef</span><span class="p">,</span> <span class="n">ClassDef</span><span class="p">,</span> <span class="n">Module</span><span class="p">)</span>
+        <span class="p">)</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">body</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="n">node</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">Expr</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="n">node</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">value</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">Constant</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">node</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_type_comment</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="c1"># patch: make type_comment optional</span>
+        <span class="n">comment</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_type_ignores</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">lineno</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="nb">hasattr</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="s1">&#39;type_comment&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">node</span><span class="o">.</span><span class="n">type_comment</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">comment</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
+            <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot; # type: </span><span class="si">{</span><span class="n">comment</span><span class="si">}</span><span class="s2">&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">traverse</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">node</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">traverse</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">visit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Outputs a source code string that, if converted back to an ast</span>
+<span class="sd">        (using ast.parse) will generate an AST equivalent to *node*&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_source</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">traverse</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_source</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_write_docstring_and_traverse_body</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">docstring</span> <span class="o">:=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_raw_docstring</span><span class="p">(</span><span class="n">node</span><span class="p">)):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_write_docstring</span><span class="p">(</span><span class="n">docstring</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">traverse</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">traverse</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">body</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">visit_Module</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_type_ignores</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">ignore</span><span class="o">.</span><span class="n">lineno</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;ignore</span><span class="si">{</span><span class="n">ignore</span><span class="o">.</span><span class="n">tag</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="k">for</span> <span class="n">ignore</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">type_ignores</span>
+        <span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_write_docstring_and_traverse_body</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_type_ignores</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">visit_FunctionType</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">delimit</span><span class="p">(</span><span class="s2">&quot;(&quot;</span><span class="p">,</span> <span class="s2">&quot;)&quot;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">interleave</span><span class="p">(</span>
+                <span class="k">lambda</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;, &quot;</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">traverse</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">argtypes</span>
+            <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot; -&gt; &quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">traverse</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">returns</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">visit_Expr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fill</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_precedence</span><span class="p">(</span><span class="n">_Precedence</span><span class="o">.</span><span class="n">YIELD</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">traverse</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">visit_NamedExpr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">require_parens</span><span class="p">(</span><span class="n">_Precedence</span><span class="o">.</span><span class="n">TUPLE</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">set_precedence</span><span class="p">(</span><span class="n">_Precedence</span><span class="o">.</span><span class="n">ATOM</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">target</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">traverse</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">target</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot; := &quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">traverse</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">visit_Import</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="s2">&quot;import &quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">interleave</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;, &quot;</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">traverse</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">names</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">visit_ImportFrom</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="s2">&quot;from &quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;.&quot;</span> <span class="o">*</span> <span class="n">node</span><span class="o">.</span><span class="n">level</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">module</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">module</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot; import &quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">interleave</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;, &quot;</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">traverse</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">names</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">visit_Assign</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fill</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">target</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">targets</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">traverse</span><span class="p">(</span><span class="n">target</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot; = &quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">traverse</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">type_comment</span> <span class="o">:=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_type_comment</span><span class="p">(</span><span class="n">node</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">type_comment</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">visit_AugAssign</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fill</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">traverse</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">target</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot; &quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">binop</span><span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">op</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;= &quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">traverse</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">visit_AnnAssign</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fill</span><span class="p">()</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">delimit_if</span><span class="p">(</span><span class="s2">&quot;(&quot;</span><span class="p">,</span> <span class="s2">&quot;)&quot;</span><span class="p">,</span> <span class="ow">not</span> <span class="n">node</span><span class="o">.</span><span class="n">simple</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">target</span><span class="p">,</span> <span class="n">Name</span><span class="p">)):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">traverse</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">target</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;: &quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">traverse</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">annotation</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">value</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot; = &quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">traverse</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">visit_Return</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="s2">&quot;return&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">value</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">traverse</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">visit_Pass</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="s2">&quot;pass&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">visit_Break</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="s2">&quot;break&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">visit_Continue</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="s2">&quot;continue&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">visit_Delete</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="s2">&quot;del &quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">interleave</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;, &quot;</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">traverse</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">targets</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">visit_Assert</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="s2">&quot;assert &quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">traverse</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">test</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">msg</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;, &quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">traverse</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">visit_Global</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="s2">&quot;global &quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">interleave</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;, &quot;</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">names</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">visit_Nonlocal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="s2">&quot;nonlocal &quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">interleave</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;, &quot;</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">names</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">visit_Await</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">require_parens</span><span class="p">(</span><span class="n">_Precedence</span><span class="o">.</span><span class="n">AWAIT</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;await&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">value</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">set_precedence</span><span class="p">(</span><span class="n">_Precedence</span><span class="o">.</span><span class="n">ATOM</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">traverse</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">visit_Yield</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">require_parens</span><span class="p">(</span><span class="n">_Precedence</span><span class="o">.</span><span class="n">YIELD</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;yield&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">value</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">set_precedence</span><span class="p">(</span><span class="n">_Precedence</span><span class="o">.</span><span class="n">ATOM</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">traverse</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">visit_YieldFrom</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">require_parens</span><span class="p">(</span><span class="n">_Precedence</span><span class="o">.</span><span class="n">YIELD</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;yield from &quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">node</span><span class="o">.</span><span class="n">value</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Node can&#39;t be used without a value attribute.&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">set_precedence</span><span class="p">(</span><span class="n">_Precedence</span><span class="o">.</span><span class="n">ATOM</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">traverse</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">visit_Raise</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="s2">&quot;raise&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">node</span><span class="o">.</span><span class="n">exc</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">cause</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Node can&#39;t use cause without an exception.&quot;</span><span class="p">)</span>
+            <span class="k">return</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">traverse</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">exc</span><span class="p">)</span>
+        <span class="c1"># castix: allow causeless</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="s1">&#39;cause&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">node</span><span class="o">.</span><span class="n">cause</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot; from &quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">traverse</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">cause</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">handler_sorter</span><span class="p">(</span><span class="n">handler</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="n">handler</span><span class="o">.</span><span class="n">type</span><span class="o">.</span><span class="n">id</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">handler</span><span class="o">.</span><span class="n">type</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">Name</span><span class="p">)</span>
+            <span class="k">else</span> <span class="n">unparse</span><span class="p">(</span><span class="n">handler</span><span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">visit_Try</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="c1"># patch: sort handlers</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="s2">&quot;try&quot;</span><span class="p">)</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">block</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">traverse</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">body</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">ex</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">handlers</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">handler_sorter</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">traverse</span><span class="p">(</span><span class="n">ex</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">orelse</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="s2">&quot;else&quot;</span><span class="p">)</span>
+            <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">block</span><span class="p">():</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">traverse</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">orelse</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">finalbody</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="s2">&quot;finally&quot;</span><span class="p">)</span>
+            <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">block</span><span class="p">():</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">traverse</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">finalbody</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">visit_ExceptHandler</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="s2">&quot;except&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">type</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">traverse</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">type</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot; as &quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">block</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">traverse</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">body</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">visit_ClassDef</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">maybe_newline</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">deco</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">decorator_list</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="s2">&quot;@&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">traverse</span><span class="p">(</span><span class="n">deco</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="s2">&quot;class &quot;</span> <span class="o">+</span> <span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">delimit_if</span><span class="p">(</span><span class="s2">&quot;(&quot;</span><span class="p">,</span> <span class="s2">&quot;)&quot;</span><span class="p">,</span> <span class="n">condition</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">bases</span> <span class="ow">or</span> <span class="n">node</span><span class="o">.</span><span class="n">keywords</span><span class="p">):</span>
+            <span class="n">comma</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">bases</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">comma</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;, &quot;</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">comma</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">traverse</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">keywords</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">comma</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;, &quot;</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">comma</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">traverse</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">block</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_write_docstring_and_traverse_body</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">visit_FunctionDef</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_function_helper</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="s2">&quot;def&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">visit_AsyncFunctionDef</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_function_helper</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="s2">&quot;async def&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_function_helper</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">fill_suffix</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">maybe_newline</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">deco</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">decorator_list</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="s2">&quot;@&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">traverse</span><span class="p">(</span><span class="n">deco</span><span class="p">)</span>
+        <span class="n">def_str</span> <span class="o">=</span> <span class="n">fill_suffix</span> <span class="o">+</span> <span class="s2">&quot; &quot;</span> <span class="o">+</span> <span class="n">node</span><span class="o">.</span><span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="n">def_str</span><span class="p">)</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">delimit</span><span class="p">(</span><span class="s2">&quot;(&quot;</span><span class="p">,</span> <span class="s2">&quot;)&quot;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">traverse</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">returns</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot; -&gt; &quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">traverse</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">returns</span><span class="p">)</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">block</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">get_type_comment</span><span class="p">(</span><span class="n">node</span><span class="p">)):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_write_docstring_and_traverse_body</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">visit_For</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_for_helper</span><span class="p">(</span><span class="s2">&quot;for &quot;</span><span class="p">,</span> <span class="n">node</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">visit_AsyncFor</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_for_helper</span><span class="p">(</span><span class="s2">&quot;async for &quot;</span><span class="p">,</span> <span class="n">node</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_for_helper</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fill</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="n">fill</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">traverse</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">target</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot; in &quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">traverse</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">iter</span><span class="p">)</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">block</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">get_type_comment</span><span class="p">(</span><span class="n">node</span><span class="p">)):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">traverse</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">body</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">orelse</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="s2">&quot;else&quot;</span><span class="p">)</span>
+            <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">block</span><span class="p">():</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">traverse</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">orelse</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">visit_If</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="s2">&quot;if &quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">traverse</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">test</span><span class="p">)</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">block</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">traverse</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">body</span><span class="p">)</span>
+        <span class="c1"># collapse nested ifs into equivalent elifs.</span>
+        <span class="k">while</span> <span class="n">node</span><span class="o">.</span><span class="n">orelse</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">orelse</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">orelse</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">If</span><span class="p">):</span>
+            <span class="n">node</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">orelse</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="s2">&quot;elif &quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">traverse</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">test</span><span class="p">)</span>
+            <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">block</span><span class="p">():</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">traverse</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">body</span><span class="p">)</span>
+        <span class="c1"># final else</span>
+        <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">orelse</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="s2">&quot;else&quot;</span><span class="p">)</span>
+            <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">block</span><span class="p">():</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">traverse</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">orelse</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">visit_While</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="s2">&quot;while &quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">traverse</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">test</span><span class="p">)</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">block</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">traverse</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">body</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">orelse</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="s2">&quot;else&quot;</span><span class="p">)</span>
+            <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">block</span><span class="p">():</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">traverse</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">orelse</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">visit_With</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="s2">&quot;with &quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">interleave</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;, &quot;</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">traverse</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">items</span><span class="p">)</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">block</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">get_type_comment</span><span class="p">(</span><span class="n">node</span><span class="p">)):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">traverse</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">body</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">visit_AsyncWith</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="s2">&quot;async with &quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">interleave</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;, &quot;</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">traverse</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">items</span><span class="p">)</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">block</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">get_type_comment</span><span class="p">(</span><span class="n">node</span><span class="p">)):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">traverse</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">body</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_str_literal_helper</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">string</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">quote_types</span><span class="o">=</span><span class="n">_ALL_QUOTES</span><span class="p">,</span> <span class="n">escape_special_whitespace</span><span class="o">=</span><span class="kc">False</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Helper for writing string literals, minimizing escapes.</span>
+<span class="sd">        Returns the tuple (string literal to write, possible quote types).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">escape_char</span><span class="p">(</span><span class="n">c</span><span class="p">):</span>
+            <span class="c1"># \n and \t are non-printable, but we only escape them if</span>
+            <span class="c1"># escape_special_whitespace is True</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">escape_special_whitespace</span> <span class="ow">and</span> <span class="n">c</span> <span class="ow">in</span> <span class="s2">&quot;</span><span class="se">\n\t</span><span class="s2">&quot;</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">c</span>
+            <span class="c1"># Always escape backslashes and other non-printable characters</span>
+            <span class="k">if</span> <span class="n">c</span> <span class="o">==</span> <span class="s2">&quot;</span><span class="se">\\</span><span class="s2">&quot;</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">c</span><span class="o">.</span><span class="n">isprintable</span><span class="p">():</span>
+                <span class="k">return</span> <span class="n">c</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;unicode_escape&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;ascii&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">c</span>
+
+        <span class="n">escaped_string</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">escape_char</span><span class="p">,</span> <span class="n">string</span><span class="p">))</span>
+        <span class="n">possible_quotes</span> <span class="o">=</span> <span class="n">quote_types</span>
+        <span class="k">if</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="ow">in</span> <span class="n">escaped_string</span><span class="p">:</span>
+            <span class="n">possible_quotes</span> <span class="o">=</span> <span class="p">[</span><span class="n">q</span> <span class="k">for</span> <span class="n">q</span> <span class="ow">in</span> <span class="n">possible_quotes</span> <span class="k">if</span> <span class="n">q</span> <span class="ow">in</span> <span class="n">_MULTI_QUOTES</span><span class="p">]</span>
+        <span class="n">possible_quotes</span> <span class="o">=</span> <span class="p">[</span><span class="n">q</span> <span class="k">for</span> <span class="n">q</span> <span class="ow">in</span> <span class="n">possible_quotes</span> <span class="k">if</span> <span class="n">q</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">escaped_string</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">possible_quotes</span><span class="p">:</span>
+            <span class="c1"># If there aren&#39;t any possible_quotes, fallback to using repr</span>
+            <span class="c1"># on the original string. Try to use a quote from quote_types,</span>
+            <span class="c1"># e.g., so that we use triple quotes for docstrings.</span>
+            <span class="n">string</span> <span class="o">=</span> <span class="nb">repr</span><span class="p">(</span><span class="n">string</span><span class="p">)</span>
+            <span class="n">quote</span> <span class="o">=</span> <span class="nb">next</span><span class="p">((</span><span class="n">q</span> <span class="k">for</span> <span class="n">q</span> <span class="ow">in</span> <span class="n">quote_types</span> <span class="k">if</span> <span class="n">string</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">in</span> <span class="n">q</span><span class="p">),</span> <span class="n">string</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="k">return</span> <span class="n">string</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="n">quote</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">escaped_string</span><span class="p">:</span>
+            <span class="c1"># Sort so that we prefer &#39;&#39;&#39;&quot;&#39;&#39;&#39; over &quot;&quot;&quot;\&quot;&quot;&quot;&quot;</span>
+            <span class="n">possible_quotes</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">q</span><span class="p">:</span> <span class="n">q</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">escaped_string</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+            <span class="c1"># If we&#39;re using triple quotes and we&#39;d need to escape a final</span>
+            <span class="c1"># quote, escape it</span>
+            <span class="k">if</span> <span class="n">possible_quotes</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">escaped_string</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span>
+                <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">possible_quotes</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">==</span> <span class="mi">3</span>
+                <span class="n">escaped_string</span> <span class="o">=</span> <span class="n">escaped_string</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\\</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="n">escaped_string</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">escaped_string</span><span class="p">,</span> <span class="n">possible_quotes</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_write_str_avoiding_backslashes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">string</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">quote_types</span><span class="o">=</span><span class="n">_ALL_QUOTES</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Write string literal value with a best effort attempt to avoid backslashes.&quot;&quot;&quot;</span>
+        <span class="n">string</span><span class="p">,</span> <span class="n">quote_types</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_str_literal_helper</span><span class="p">(</span><span class="n">string</span><span class="p">,</span> <span class="n">quote_types</span><span class="o">=</span><span class="n">quote_types</span><span class="p">)</span>
+        <span class="n">quote_type</span> <span class="o">=</span> <span class="n">quote_types</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">quote_type</span><span class="si">}{</span><span class="n">string</span><span class="si">}{</span><span class="n">quote_type</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">visit_JoinedStr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;f&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_avoid_backslashes</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_fstring_JoinedStr</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">buffer_writer</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_write_str_avoiding_backslashes</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">buffer</span><span class="p">)</span>
+            <span class="k">return</span>
+
+        <span class="c1"># If we don&#39;t need to avoid backslashes globally (i.e., we only need</span>
+        <span class="c1"># to avoid them inside FormattedValues), it&#39;s cosmetically preferred</span>
+        <span class="c1"># to use escaped whitespace. That is, it&#39;s preferred to use backslashes</span>
+        <span class="c1"># for cases like: f&quot;{x}\n&quot;. To accomplish this, we keep track of what</span>
+        <span class="c1"># in our buffer corresponds to FormattedValues and what corresponds to</span>
+        <span class="c1"># Constant parts of the f-string, and allow escapes accordingly.</span>
+        <span class="n">buffer</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">values</span><span class="p">:</span>
+            <span class="n">meth</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_fstring_&quot;</span> <span class="o">+</span> <span class="nb">type</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
+            <span class="n">meth</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">buffer_writer</span><span class="p">)</span>
+            <span class="n">buffer</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">buffer</span><span class="p">,</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">Constant</span><span class="p">)))</span>
+        <span class="n">new_buffer</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">quote_types</span> <span class="o">=</span> <span class="n">_ALL_QUOTES</span>
+        <span class="k">for</span> <span class="n">value</span><span class="p">,</span> <span class="n">is_constant</span> <span class="ow">in</span> <span class="n">buffer</span><span class="p">:</span>
+            <span class="c1"># Repeatedly narrow down the list of possible quote_types</span>
+            <span class="n">value</span><span class="p">,</span> <span class="n">quote_types</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_str_literal_helper</span><span class="p">(</span>
+                <span class="n">value</span><span class="p">,</span> <span class="n">quote_types</span><span class="o">=</span><span class="n">quote_types</span><span class="p">,</span>
+                <span class="n">escape_special_whitespace</span><span class="o">=</span><span class="n">is_constant</span>
+            <span class="p">)</span>
+            <span class="n">new_buffer</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">new_buffer</span><span class="p">)</span>
+        <span class="n">quote_type</span> <span class="o">=</span> <span class="n">quote_types</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">quote_type</span><span class="si">}{</span><span class="n">value</span><span class="si">}{</span><span class="n">quote_type</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">visit_FormattedValue</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;f&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fstring_FormattedValue</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">buffer_writer</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_write_str_avoiding_backslashes</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">buffer</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_fstring_JoinedStr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">write</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">values</span><span class="p">:</span>
+            <span class="n">meth</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_fstring_&quot;</span> <span class="o">+</span> <span class="nb">type</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
+            <span class="n">meth</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">write</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_fstring_Constant</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">write</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Constants inside JoinedStr should be a string.&quot;</span><span class="p">)</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;{&quot;</span><span class="p">,</span> <span class="s2">&quot;{{&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;}&quot;</span><span class="p">,</span> <span class="s2">&quot;}}&quot;</span><span class="p">)</span>
+        <span class="n">write</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_fstring_FormattedValue</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">write</span><span class="p">):</span>
+        <span class="n">write</span><span class="p">(</span><span class="s2">&quot;{&quot;</span><span class="p">)</span>
+        <span class="n">unparser</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)(</span><span class="n">_avoid_backslashes</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">unparser</span><span class="o">.</span><span class="n">set_precedence</span><span class="p">(</span><span class="n">_Precedence</span><span class="o">.</span><span class="n">TEST</span><span class="o">.</span><span class="n">next</span><span class="p">(),</span> <span class="n">node</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+        <span class="n">expr</span> <span class="o">=</span> <span class="n">unparser</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">expr</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;{&quot;</span><span class="p">):</span>
+            <span class="n">write</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">)</span>  <span class="c1"># Separate pair of opening brackets as &quot;{ {&quot;</span>
+        <span class="k">if</span> <span class="s2">&quot;</span><span class="se">\\</span><span class="s2">&quot;</span> <span class="ow">in</span> <span class="n">expr</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Unable to avoid backslash in f-string expression part&quot;</span><span class="p">)</span>
+        <span class="n">write</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">conversion</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+            <span class="n">conversion</span> <span class="o">=</span> <span class="nb">chr</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">conversion</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">conversion</span> <span class="ow">not</span> <span class="ow">in</span> <span class="s2">&quot;sra&quot;</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Unknown f-string conversion.&quot;</span><span class="p">)</span>
+            <span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;!</span><span class="si">{</span><span class="n">conversion</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">format_spec</span><span class="p">:</span>
+            <span class="n">write</span><span class="p">(</span><span class="s2">&quot;:&quot;</span><span class="p">)</span>
+            <span class="n">meth</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_fstring_&quot;</span> <span class="o">+</span> <span class="nb">type</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">format_spec</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
+            <span class="n">meth</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">format_spec</span><span class="p">,</span> <span class="n">write</span><span class="p">)</span>
+        <span class="n">write</span><span class="p">(</span><span class="s2">&quot;}&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">visit_Name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_write_docstring</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fill</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">kind</span> <span class="o">==</span> <span class="s2">&quot;u&quot;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;u&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_write_str_avoiding_backslashes</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">quote_types</span><span class="o">=</span><span class="n">_MULTI_QUOTES</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_write_constant</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="p">(</span><span class="nb">float</span><span class="p">,</span> <span class="nb">complex</span><span class="p">)):</span>
+            <span class="c1"># Substitute overflowing decimal literal for AST infinities,</span>
+            <span class="c1"># and inf - inf for NaNs.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span>
+                <span class="nb">repr</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+                <span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;inf&quot;</span><span class="p">,</span> <span class="n">_INFSTR</span><span class="p">)</span>
+                <span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;nan&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;(</span><span class="si">{</span><span class="n">_INFSTR</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">_INFSTR</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+            <span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_avoid_backslashes</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_write_str_avoiding_backslashes</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="n">value</span><span class="p">))</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">visit_Constant</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">value</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+            <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">delimit</span><span class="p">(</span><span class="s2">&quot;(&quot;</span><span class="p">,</span> <span class="s2">&quot;)&quot;</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">items_view</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_write_constant</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">value</span> <span class="ow">is</span> <span class="o">...</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;...&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># patch: make kind optional</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="s1">&#39;kind&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">node</span><span class="o">.</span><span class="n">kind</span> <span class="o">==</span> <span class="s2">&quot;u&quot;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;u&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_write_constant</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">visit_List</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">delimit</span><span class="p">(</span><span class="s2">&quot;[&quot;</span><span class="p">,</span> <span class="s2">&quot;]&quot;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">interleave</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;, &quot;</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">traverse</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">elts</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">visit_ListComp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">delimit</span><span class="p">(</span><span class="s2">&quot;[&quot;</span><span class="p">,</span> <span class="s2">&quot;]&quot;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">traverse</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">elt</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">gen</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">generators</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">traverse</span><span class="p">(</span><span class="n">gen</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">visit_GeneratorExp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">delimit</span><span class="p">(</span><span class="s2">&quot;(&quot;</span><span class="p">,</span> <span class="s2">&quot;)&quot;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">traverse</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">elt</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">gen</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">generators</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">traverse</span><span class="p">(</span><span class="n">gen</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">visit_SetComp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">delimit</span><span class="p">(</span><span class="s2">&quot;{&quot;</span><span class="p">,</span> <span class="s2">&quot;}&quot;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">traverse</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">elt</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">gen</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">generators</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">traverse</span><span class="p">(</span><span class="n">gen</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">visit_DictComp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">delimit</span><span class="p">(</span><span class="s2">&quot;{&quot;</span><span class="p">,</span> <span class="s2">&quot;}&quot;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">traverse</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">key</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;: &quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">traverse</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">gen</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">generators</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">traverse</span><span class="p">(</span><span class="n">gen</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">visit_comprehension</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">is_async</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot; async for &quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot; for &quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_precedence</span><span class="p">(</span><span class="n">_Precedence</span><span class="o">.</span><span class="n">TUPLE</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">target</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">traverse</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">target</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot; in &quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_precedence</span><span class="p">(</span><span class="n">_Precedence</span><span class="o">.</span><span class="n">TEST</span><span class="o">.</span><span class="n">next</span><span class="p">(),</span> <span class="n">node</span><span class="o">.</span><span class="n">iter</span><span class="p">,</span> <span class="o">*</span><span class="n">node</span><span class="o">.</span><span class="n">ifs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">traverse</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">iter</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">if_clause</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">ifs</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot; if &quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">traverse</span><span class="p">(</span><span class="n">if_clause</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">visit_IfExp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">require_parens</span><span class="p">(</span><span class="n">_Precedence</span><span class="o">.</span><span class="n">TEST</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">set_precedence</span><span class="p">(</span><span class="n">_Precedence</span><span class="o">.</span><span class="n">TEST</span><span class="o">.</span><span class="n">next</span><span class="p">(),</span> <span class="n">node</span><span class="o">.</span><span class="n">body</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">test</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">traverse</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">body</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot; if &quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">traverse</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">test</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot; else &quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">set_precedence</span><span class="p">(</span><span class="n">_Precedence</span><span class="o">.</span><span class="n">TEST</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">orelse</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">traverse</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">orelse</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">visit_Set</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">elts</span><span class="p">:</span>
+            <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">delimit</span><span class="p">(</span><span class="s2">&quot;{&quot;</span><span class="p">,</span> <span class="s2">&quot;}&quot;</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">interleave</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;, &quot;</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">traverse</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">elts</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># `{}` would be interpreted as a dictionary literal, and</span>
+            <span class="c1"># `set` might be shadowed. Thus:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;{*()}&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">visit_Dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">write_key_value_pair</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">traverse</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;: &quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">traverse</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">write_item</span><span class="p">(</span><span class="n">item</span><span class="p">):</span>
+            <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="o">=</span> <span class="n">item</span>
+            <span class="k">if</span> <span class="n">k</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="c1"># for dictionary unpacking operator in dicts {**{&#39;y&#39;: 2}}</span>
+                <span class="c1"># see PEP 448 for details</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;**&quot;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">set_precedence</span><span class="p">(</span><span class="n">_Precedence</span><span class="o">.</span><span class="n">EXPR</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">traverse</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">write_key_value_pair</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">delimit</span><span class="p">(</span><span class="s2">&quot;{&quot;</span><span class="p">,</span> <span class="s2">&quot;}&quot;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">interleave</span><span class="p">(</span>
+                <span class="k">lambda</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;, &quot;</span><span class="p">),</span> <span class="n">write_item</span><span class="p">,</span> <span class="nb">zip</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">keys</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
+            <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">visit_Tuple</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">delimit</span><span class="p">(</span><span class="s2">&quot;(&quot;</span><span class="p">,</span> <span class="s2">&quot;)&quot;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">items_view</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">traverse</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">elts</span><span class="p">)</span>
+
+    <span class="n">unop</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;Invert&quot;</span><span class="p">:</span> <span class="s2">&quot;~&quot;</span><span class="p">,</span> <span class="s2">&quot;Not&quot;</span><span class="p">:</span> <span class="s2">&quot;not&quot;</span><span class="p">,</span> <span class="s2">&quot;UAdd&quot;</span><span class="p">:</span> <span class="s2">&quot;+&quot;</span><span class="p">,</span> <span class="s2">&quot;USub&quot;</span><span class="p">:</span> <span class="s2">&quot;-&quot;</span><span class="p">}</span>
+    <span class="n">unop_precedence</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;not&quot;</span><span class="p">:</span> <span class="n">_Precedence</span><span class="o">.</span><span class="n">NOT</span><span class="p">,</span>
+        <span class="s2">&quot;~&quot;</span><span class="p">:</span> <span class="n">_Precedence</span><span class="o">.</span><span class="n">FACTOR</span><span class="p">,</span>
+        <span class="s2">&quot;+&quot;</span><span class="p">:</span> <span class="n">_Precedence</span><span class="o">.</span><span class="n">FACTOR</span><span class="p">,</span>
+        <span class="s2">&quot;-&quot;</span><span class="p">:</span> <span class="n">_Precedence</span><span class="o">.</span><span class="n">FACTOR</span><span class="p">,</span>
+    <span class="p">}</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">visit_UnaryOp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="n">operator</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">unop</span><span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">op</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">]</span>
+        <span class="n">operator_precedence</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">unop_precedence</span><span class="p">[</span><span class="n">operator</span><span class="p">]</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">require_parens</span><span class="p">(</span><span class="n">operator_precedence</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">operator</span><span class="p">)</span>
+            <span class="c1"># factor prefixes (+, -, ~) shouldn&#39;t be seperated</span>
+            <span class="c1"># from the value they belong, (e.g: +1 instead of + 1)</span>
+            <span class="k">if</span> <span class="n">operator_precedence</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">_Precedence</span><span class="o">.</span><span class="n">FACTOR</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">set_precedence</span><span class="p">(</span><span class="n">operator_precedence</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">operand</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">traverse</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">operand</span><span class="p">)</span>
+
+    <span class="n">binop</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;Add&quot;</span><span class="p">:</span> <span class="s2">&quot;+&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;Sub&quot;</span><span class="p">:</span> <span class="s2">&quot;-&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;Mult&quot;</span><span class="p">:</span> <span class="s2">&quot;*&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;MatMult&quot;</span><span class="p">:</span> <span class="s2">&quot;@&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;Div&quot;</span><span class="p">:</span> <span class="s2">&quot;/&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;Mod&quot;</span><span class="p">:</span> <span class="s2">&quot;%&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;LShift&quot;</span><span class="p">:</span> <span class="s2">&quot;&lt;&lt;&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;RShift&quot;</span><span class="p">:</span> <span class="s2">&quot;&gt;&gt;&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;BitOr&quot;</span><span class="p">:</span> <span class="s2">&quot;|&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;BitXor&quot;</span><span class="p">:</span> <span class="s2">&quot;^&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;BitAnd&quot;</span><span class="p">:</span> <span class="s2">&quot;&amp;&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;FloorDiv&quot;</span><span class="p">:</span> <span class="s2">&quot;//&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;Pow&quot;</span><span class="p">:</span> <span class="s2">&quot;**&quot;</span><span class="p">,</span>
+    <span class="p">}</span>
+
+    <span class="n">binop_precedence</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;+&quot;</span><span class="p">:</span> <span class="n">_Precedence</span><span class="o">.</span><span class="n">ARITH</span><span class="p">,</span>
+        <span class="s2">&quot;-&quot;</span><span class="p">:</span> <span class="n">_Precedence</span><span class="o">.</span><span class="n">ARITH</span><span class="p">,</span>
+        <span class="s2">&quot;*&quot;</span><span class="p">:</span> <span class="n">_Precedence</span><span class="o">.</span><span class="n">TERM</span><span class="p">,</span>
+        <span class="s2">&quot;@&quot;</span><span class="p">:</span> <span class="n">_Precedence</span><span class="o">.</span><span class="n">TERM</span><span class="p">,</span>
+        <span class="s2">&quot;/&quot;</span><span class="p">:</span> <span class="n">_Precedence</span><span class="o">.</span><span class="n">TERM</span><span class="p">,</span>
+        <span class="s2">&quot;%&quot;</span><span class="p">:</span> <span class="n">_Precedence</span><span class="o">.</span><span class="n">TERM</span><span class="p">,</span>
+        <span class="s2">&quot;&lt;&lt;&quot;</span><span class="p">:</span> <span class="n">_Precedence</span><span class="o">.</span><span class="n">SHIFT</span><span class="p">,</span>
+        <span class="s2">&quot;&gt;&gt;&quot;</span><span class="p">:</span> <span class="n">_Precedence</span><span class="o">.</span><span class="n">SHIFT</span><span class="p">,</span>
+        <span class="s2">&quot;|&quot;</span><span class="p">:</span> <span class="n">_Precedence</span><span class="o">.</span><span class="n">BOR</span><span class="p">,</span>
+        <span class="s2">&quot;^&quot;</span><span class="p">:</span> <span class="n">_Precedence</span><span class="o">.</span><span class="n">BXOR</span><span class="p">,</span>
+        <span class="s2">&quot;&amp;&quot;</span><span class="p">:</span> <span class="n">_Precedence</span><span class="o">.</span><span class="n">BAND</span><span class="p">,</span>
+        <span class="s2">&quot;//&quot;</span><span class="p">:</span> <span class="n">_Precedence</span><span class="o">.</span><span class="n">TERM</span><span class="p">,</span>
+        <span class="s2">&quot;**&quot;</span><span class="p">:</span> <span class="n">_Precedence</span><span class="o">.</span><span class="n">POWER</span><span class="p">,</span>
+    <span class="p">}</span>
+
+    <span class="n">binop_rassoc</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">((</span><span class="s2">&quot;**&quot;</span><span class="p">,))</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">visit_BinOp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="n">operator</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">binop</span><span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">op</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">]</span>
+        <span class="n">operator_precedence</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">binop_precedence</span><span class="p">[</span><span class="n">operator</span><span class="p">]</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">require_parens</span><span class="p">(</span><span class="n">operator_precedence</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">operator</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">binop_rassoc</span><span class="p">:</span>
+                <span class="n">left_precedence</span> <span class="o">=</span> <span class="n">operator_precedence</span><span class="o">.</span><span class="n">next</span><span class="p">()</span>
+                <span class="n">right_precedence</span> <span class="o">=</span> <span class="n">operator_precedence</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">left_precedence</span> <span class="o">=</span> <span class="n">operator_precedence</span>
+                <span class="n">right_precedence</span> <span class="o">=</span> <span class="n">operator_precedence</span><span class="o">.</span><span class="n">next</span><span class="p">()</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">set_precedence</span><span class="p">(</span><span class="n">left_precedence</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">left</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">traverse</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">left</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot; </span><span class="si">{</span><span class="n">operator</span><span class="si">}</span><span class="s2"> &quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">set_precedence</span><span class="p">(</span><span class="n">right_precedence</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">right</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">traverse</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">right</span><span class="p">)</span>
+
+    <span class="n">cmpops</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;Eq&quot;</span><span class="p">:</span> <span class="s2">&quot;==&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;NotEq&quot;</span><span class="p">:</span> <span class="s2">&quot;!=&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;Lt&quot;</span><span class="p">:</span> <span class="s2">&quot;&lt;&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;LtE&quot;</span><span class="p">:</span> <span class="s2">&quot;&lt;=&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;Gt&quot;</span><span class="p">:</span> <span class="s2">&quot;&gt;&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;GtE&quot;</span><span class="p">:</span> <span class="s2">&quot;&gt;=&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;Is&quot;</span><span class="p">:</span> <span class="s2">&quot;is&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;IsNot&quot;</span><span class="p">:</span> <span class="s2">&quot;is not&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;In&quot;</span><span class="p">:</span> <span class="s2">&quot;in&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;NotIn&quot;</span><span class="p">:</span> <span class="s2">&quot;not in&quot;</span><span class="p">,</span>
+    <span class="p">}</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">visit_Compare</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">require_parens</span><span class="p">(</span><span class="n">_Precedence</span><span class="o">.</span><span class="n">CMP</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">set_precedence</span><span class="p">(</span><span class="n">_Precedence</span><span class="o">.</span><span class="n">CMP</span><span class="o">.</span><span class="n">next</span><span class="p">(),</span> <span class="n">node</span><span class="o">.</span><span class="n">left</span><span class="p">,</span> <span class="o">*</span><span class="n">node</span><span class="o">.</span><span class="n">comparators</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">traverse</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">left</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">o</span><span class="p">,</span> <span class="n">e</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">ops</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">comparators</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot; &quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">cmpops</span><span class="p">[</span><span class="n">o</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot; &quot;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">traverse</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+
+    <span class="n">boolops</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;And&quot;</span><span class="p">:</span> <span class="s2">&quot;and&quot;</span><span class="p">,</span> <span class="s2">&quot;Or&quot;</span><span class="p">:</span> <span class="s2">&quot;or&quot;</span><span class="p">}</span>
+    <span class="n">boolop_precedence</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;and&quot;</span><span class="p">:</span> <span class="n">_Precedence</span><span class="o">.</span><span class="n">AND</span><span class="p">,</span> <span class="s2">&quot;or&quot;</span><span class="p">:</span> <span class="n">_Precedence</span><span class="o">.</span><span class="n">OR</span><span class="p">}</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">visit_BoolOp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="n">operator</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">boolops</span><span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">op</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">]</span>
+        <span class="n">operator_precedence</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">boolop_precedence</span><span class="p">[</span><span class="n">operator</span><span class="p">]</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">increasing_level_traverse</span><span class="p">(</span><span class="n">node</span><span class="p">):</span>
+            <span class="k">nonlocal</span> <span class="n">operator_precedence</span>
+            <span class="n">operator_precedence</span> <span class="o">=</span> <span class="n">operator_precedence</span><span class="o">.</span><span class="n">next</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">set_precedence</span><span class="p">(</span><span class="n">operator_precedence</span><span class="p">,</span> <span class="n">node</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">traverse</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">require_parens</span><span class="p">(</span><span class="n">operator_precedence</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+            <span class="n">s</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot; </span><span class="si">{</span><span class="n">operator</span><span class="si">}</span><span class="s2"> &quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">interleave</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">s</span><span class="p">),</span> <span class="n">increasing_level_traverse</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">visit_Attribute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_precedence</span><span class="p">(</span><span class="n">_Precedence</span><span class="o">.</span><span class="n">ATOM</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">traverse</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+        <span class="c1"># Special case: 3.__abs__() is a syntax error, so if node.value</span>
+        <span class="c1"># is an integer literal then we need to either parenthesize</span>
+        <span class="c1"># it or add an extra space to get 3 .__abs__().</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">Constant</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">attr</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">visit_Call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_precedence</span><span class="p">(</span><span class="n">_Precedence</span><span class="o">.</span><span class="n">ATOM</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">func</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">traverse</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">func</span><span class="p">)</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">delimit</span><span class="p">(</span><span class="s2">&quot;(&quot;</span><span class="p">,</span> <span class="s2">&quot;)&quot;</span><span class="p">):</span>
+            <span class="n">comma</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">args</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">comma</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;, &quot;</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">comma</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">traverse</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">keywords</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">comma</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;, &quot;</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">comma</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">traverse</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">visit_Subscript</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">is_simple_tuple</span><span class="p">(</span><span class="n">slice_value</span><span class="p">):</span>
+            <span class="c1"># when unparsing a non-empty tuple, the parentheses can be safely</span>
+            <span class="c1"># omitted if there aren&#39;t any elements that explicitly requires</span>
+            <span class="c1"># parentheses (such as starred expressions).</span>
+            <span class="k">return</span> <span class="p">(</span>
+                <span class="nb">isinstance</span><span class="p">(</span><span class="n">slice_value</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">)</span>
+                <span class="ow">and</span> <span class="n">slice_value</span><span class="o">.</span><span class="n">elts</span>
+                <span class="ow">and</span> <span class="ow">not</span> <span class="nb">any</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">elt</span><span class="p">,</span> <span class="n">Starred</span><span class="p">)</span> <span class="k">for</span> <span class="n">elt</span> <span class="ow">in</span> <span class="n">slice_value</span><span class="o">.</span><span class="n">elts</span><span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_precedence</span><span class="p">(</span><span class="n">_Precedence</span><span class="o">.</span><span class="n">ATOM</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">traverse</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">delimit</span><span class="p">(</span><span class="s2">&quot;[&quot;</span><span class="p">,</span> <span class="s2">&quot;]&quot;</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">is_simple_tuple</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">slice</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">items_view</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">traverse</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">slice</span><span class="o">.</span><span class="n">elts</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">traverse</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">slice</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">visit_Index</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="c1"># patch by castix</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">traverse</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">visit_Starred</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;*&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_precedence</span><span class="p">(</span><span class="n">_Precedence</span><span class="o">.</span><span class="n">EXPR</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">traverse</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">visit_Ellipsis</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;...&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">visit_Slice</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">lower</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">traverse</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">lower</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;:&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">upper</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">traverse</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">upper</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">step</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;:&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">traverse</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">step</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">visit_arg</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">arg</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">annotation</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;: &quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">traverse</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">annotation</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">visit_arguments</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="n">first</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="c1"># normal arguments</span>
+        <span class="n">all_args</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">posonlyargs</span> <span class="o">+</span> <span class="n">node</span><span class="o">.</span><span class="n">args</span>
+        <span class="n">defaults</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">all_args</span><span class="p">)</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">defaults</span><span class="p">))</span> <span class="o">+</span> <span class="n">node</span><span class="o">.</span><span class="n">defaults</span>
+        <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">elements</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">all_args</span><span class="p">,</span> <span class="n">defaults</span><span class="p">),</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="n">a</span><span class="p">,</span> <span class="n">d</span> <span class="o">=</span> <span class="n">elements</span>
+            <span class="k">if</span> <span class="n">first</span><span class="p">:</span>
+                <span class="n">first</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;, &quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">traverse</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">d</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;=&quot;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">traverse</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">index</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">posonlyargs</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;, /&quot;</span><span class="p">)</span>
+
+        <span class="c1"># varargs, or bare &#39;*&#39; if no varargs but keyword-only arguments present</span>
+        <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">vararg</span> <span class="ow">or</span> <span class="n">node</span><span class="o">.</span><span class="n">kwonlyargs</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">first</span><span class="p">:</span>
+                <span class="n">first</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;, &quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;*&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">vararg</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">vararg</span><span class="o">.</span><span class="n">arg</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">vararg</span><span class="o">.</span><span class="n">annotation</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;: &quot;</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">traverse</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">vararg</span><span class="o">.</span><span class="n">annotation</span><span class="p">)</span>
+
+        <span class="c1"># keyword-only arguments</span>
+        <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">kwonlyargs</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">a</span><span class="p">,</span> <span class="n">d</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">kwonlyargs</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">kw_defaults</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;, &quot;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">traverse</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">d</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;=&quot;</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">traverse</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
+
+        <span class="c1"># kwargs</span>
+        <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">kwarg</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">first</span><span class="p">:</span>
+                <span class="n">first</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;, &quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;**&quot;</span> <span class="o">+</span> <span class="n">node</span><span class="o">.</span><span class="n">kwarg</span><span class="o">.</span><span class="n">arg</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">kwarg</span><span class="o">.</span><span class="n">annotation</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;: &quot;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">traverse</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">kwarg</span><span class="o">.</span><span class="n">annotation</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">visit_keyword</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">arg</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;**&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">arg</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;=&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">traverse</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">visit_Lambda</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">require_parens</span><span class="p">(</span><span class="n">_Precedence</span><span class="o">.</span><span class="n">TEST</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;lambda &quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">traverse</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;: &quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">set_precedence</span><span class="p">(</span><span class="n">_Precedence</span><span class="o">.</span><span class="n">TEST</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">body</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">traverse</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">body</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">visit_alias</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">asname</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot; as &quot;</span> <span class="o">+</span> <span class="n">node</span><span class="o">.</span><span class="n">asname</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">visit_withitem</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">traverse</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">context_expr</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">optional_vars</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot; as &quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">traverse</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">optional_vars</span><span class="p">)</span>
+
+    <span class="c1"># some import-time/deferred macro expansion</span>
+    <span class="c1"># might use this, just procrastinating here :)</span>
+    <span class="c1"># https://bugs.python.org/issue?@action=redirect&amp;bpo=34822  &lt;-- I appreciate</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">visit_slice</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;py3.8 had a ast.slice, email me if you need this&#39;</span><span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">visit_ExtSlice</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;py3.8 had a ast.ExtSlice, email me if you need this&#39;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="unparse">
+<a class="viewcode-back" href="../../py39unparser.html#yeastr.py39unparser.unparse">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">unparse</span><span class="p">(</span><span class="n">ast_obj</span><span class="p">):</span>
+    <span class="n">unparser</span> <span class="o">=</span> <span class="n">_Unparser</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">unparser</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">ast_obj</span><span class="p">)</span></div>
+
+
+
+<span class="c1"># monkeypatch to be a drop in backport</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">ast</span>
+<span class="n">ast</span><span class="o">.</span><span class="n">_Precedence</span> <span class="o">=</span> <span class="n">_Precedence</span>
+<span class="n">ast</span><span class="o">.</span><span class="n">_Unparser</span> <span class="o">=</span> <span class="n">_Unparser</span>
+<span class="n">ast</span><span class="o">.</span><span class="n">unparse</span> <span class="o">=</span> <span class="n">unparse</span>
+<span class="n">ast</span><span class="o">.</span><span class="n">_dump</span> <span class="o">=</span> <span class="n">ast</span><span class="o">.</span><span class="n">dump</span>
+<span class="n">ast</span><span class="o">.</span><span class="n">dump</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">n</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">:</span> <span class="n">ast</span><span class="o">.</span><span class="n">_dump</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">yeastr</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../features.html">Yeastr Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Yeastr Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../internal_documentation.html">Internal Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../implementation_reference.html">Implementation Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../genindex.html">Index</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2025, CAST.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 8.2.3</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

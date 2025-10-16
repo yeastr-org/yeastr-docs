@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Internal Documentation &#8212; yeastr 0.0.2 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="_static/graphviz.css?v=4ae1632d" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=c43d8ed7" />
+    <script src="_static/documentation_options.js?v=e3a6060d"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Utils" href="_utils.html" />
+    <link rel="prev" title="Yeastr Quickstart" href="quickstart.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="internal-documentation">
+<h1>Internal Documentation<a class="headerlink" href="#internal-documentation" title="Link to this heading">¶</a></h1>
+<p>Docuentation gathered through AST inspection</p>
+<div class="toctree-wrapper compound">
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="_utils.html">Utils</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="_utils.html#yeastr.utils.Moon"><code class="docutils literal notranslate"><span class="pre">Moon</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="_utils.html#yeastr.utils.Moon.__init__"><code class="docutils literal notranslate"><span class="pre">Moon.__init__()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="_utils.html#yeastr.utils.Moon.node"><code class="docutils literal notranslate"><span class="pre">Moon.node</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="_utils.html#yeastr.utils.Moon.up"><code class="docutils literal notranslate"><span class="pre">Moon.up</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="_utils.html#id0"><code class="docutils literal notranslate"><span class="pre">Moon.up()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="_utils.html#yeastr.utils.Moon.__str__"><code class="docutils literal notranslate"><span class="pre">Moon.__str__()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="_utils.html#yeastr.utils.Moon.recursive_repr"><code class="docutils literal notranslate"><span class="pre">Moon.recursive_repr()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="_utils.html#yeastr.utils.Moon.upper"><code class="docutils literal notranslate"><span class="pre">Moon.upper()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="_utils.html#yeastr.utils.Moon.replace"><code class="docutils literal notranslate"><span class="pre">Moon.replace()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="_utils.html#yeastr.utils.Moon.pop"><code class="docutils literal notranslate"><span class="pre">Moon.pop()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="_utils.html#yeastr.utils.Moon.pop_extend"><code class="docutils literal notranslate"><span class="pre">Moon.pop_extend()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="_utils.html#yeastr.utils.Moon.prepend"><code class="docutils literal notranslate"><span class="pre">Moon.prepend()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="_utils.html#yeastr.utils.Moon.append"><code class="docutils literal notranslate"><span class="pre">Moon.append()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="_utils.html#yeastr.utils.MoonGrabber"><code class="docutils literal notranslate"><span class="pre">MoonGrabber</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="_utils.html#yeastr.utils.MoonGrabber.reset"><code class="docutils literal notranslate"><span class="pre">MoonGrabber.reset</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="_utils.html#yeastr.utils.MoonGrabber.__enter__"><code class="docutils literal notranslate"><span class="pre">MoonGrabber.__enter__()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="_utils.html#yeastr.utils.MoonGrabber.__exit__"><code class="docutils literal notranslate"><span class="pre">MoonGrabber.__exit__()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="_utils.html#yeastr.utils.MoonGrabber.__call__"><code class="docutils literal notranslate"><span class="pre">MoonGrabber.__call__()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="_utils.html#yeastr.utils.MoonWalking"><code class="docutils literal notranslate"><span class="pre">MoonWalking</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="_utils.html#yeastr.utils.MoonWalking.__init__"><code class="docutils literal notranslate"><span class="pre">MoonWalking.__init__()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="_utils.html#yeastr.utils.MoonWalking._iter_ast"><code class="docutils literal notranslate"><span class="pre">MoonWalking._iter_ast()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="_utils.html#yeastr.utils.ast_copy"><code class="docutils literal notranslate"><span class="pre">ast_copy()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="_utils.html#yeastr.utils.yam_module_docstring"><code class="docutils literal notranslate"><span class="pre">yam_module_docstring()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="_utils.html#yeastr.utils.yam_module_future_import"><code class="docutils literal notranslate"><span class="pre">yam_module_future_import()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="_utils.html#yeastr.utils.module_future_imports_count"><code class="docutils literal notranslate"><span class="pre">module_future_imports_count()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="_utils.html#yeastr.utils.add_at_the_module_beginning"><code class="docutils literal notranslate"><span class="pre">add_at_the_module_beginning()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="_utils.html#yeastr.utils.strip_module_docstring"><code class="docutils literal notranslate"><span class="pre">strip_module_docstring()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="_utils.html#yeastr.utils.TransformError"><code class="docutils literal notranslate"><span class="pre">TransformError</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="_utils.html#yeastr.utils.YMF_hygienic"><code class="docutils literal notranslate"><span class="pre">YMF_hygienic</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="_utils.html#yeastr.utils.YMF_mLang"><code class="docutils literal notranslate"><span class="pre">YMF_mLang</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="_utils.html#yeastr.utils.YMF_expr"><code class="docutils literal notranslate"><span class="pre">YMF_expr</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="_utils.html#yeastr.utils.def_macro"><code class="docutils literal notranslate"><span class="pre">def_macro()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="_utils.html#yeastr.utils.mLang_conv"><code class="docutils literal notranslate"><span class="pre">mLang_conv()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="_utils.html#yeastr.utils.restricted_builtins"><code class="docutils literal notranslate"><span class="pre">restricted_builtins</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="_shared.html">Shared</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="_shared.html#yeastr.shared.prepare_source"><code class="docutils literal notranslate"><span class="pre">prepare_source()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="_shared.html#yeastr.shared.and_so_on"><code class="docutils literal notranslate"><span class="pre">and_so_on()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="_shared.html#yeastr.shared.store_source"><code class="docutils literal notranslate"><span class="pre">store_source()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="_shared.html#yeastr.shared.__all__"><code class="docutils literal notranslate"><span class="pre">__all__</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="_impl_macros.html">Macro Implementation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="_impl_macros.html#yeastr.impl_macros.Macros"><code class="docutils literal notranslate"><span class="pre">Macros</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="_impl_macros.html#yeastr.impl_macros.Macros.__init__"><code class="docutils literal notranslate"><span class="pre">Macros.__init__()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="_impl_macros.html#yeastr.impl_macros.Macros.add"><code class="docutils literal notranslate"><span class="pre">Macros.add()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="_impl_macros.html#yeastr.impl_macros.Macros.add_ast"><code class="docutils literal notranslate"><span class="pre">Macros.add_ast()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="_impl_macros.html#yeastr.impl_macros.Macros.retrieve"><code class="docutils literal notranslate"><span class="pre">Macros.retrieve()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="_impl_macros.html#yeastr.impl_macros._macros"><code class="docutils literal notranslate"><span class="pre">_macros</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="_impl_macros.html#yeastr.impl_macros.yam_with_call_name"><code class="docutils literal notranslate"><span class="pre">yam_with_call_name()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="_impl_macros.html#yeastr.impl_macros.mLang_evaluate_mIf"><code class="docutils literal notranslate"><span class="pre">mLang_evaluate_mIf()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="_impl_macros.html#yeastr.impl_macros.perform_body"><code class="docutils literal notranslate"><span class="pre">perform_body()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="_impl_macros.html#yeastr.impl_macros.do_mLang"><code class="docutils literal notranslate"><span class="pre">do_mLang()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="_impl_macros.html#yeastr.impl_macros.macros_to_be_expanded"><code class="docutils literal notranslate"><span class="pre">macros_to_be_expanded()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="_impl_macros.html#yeastr.impl_macros.with_macros_impl"><code class="docutils literal notranslate"><span class="pre">with_macros_impl()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="_impl_macros.html#yeastr.impl_macros.with_macros_impl_wrapper"><code class="docutils literal notranslate"><span class="pre">with_macros_impl_wrapper()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="_impl_namedloops.html">Named Loops Implementation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="_impl_namedloops.html#yeastr.impl_namedloops.compute_current_depth"><code class="docutils literal notranslate"><span class="pre">compute_current_depth()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="_impl_namedloops.html#yeastr.impl_namedloops.constant_to_bitfield"><code class="docutils literal notranslate"><span class="pre">constant_to_bitfield()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="_impl_namedloops.html#yeastr.impl_namedloops.yloopsf_reset"><code class="docutils literal notranslate"><span class="pre">yloopsf_reset()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="_impl_namedloops.html#yeastr.impl_namedloops.yloopsf_set"><code class="docutils literal notranslate"><span class="pre">yloopsf_set()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="_impl_namedloops.html#yeastr.impl_namedloops.with_namedloops_impl"><code class="docutils literal notranslate"><span class="pre">with_namedloops_impl()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="_impl_call2comp.html">call2comp Implementation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="_impl_call2comp.html#yeastr.impl_call2comp.yam_call_names"><code class="docutils literal notranslate"><span class="pre">yam_call_names()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="_impl_call2comp.html#yeastr.impl_call2comp.with_call2comp_impl"><code class="docutils literal notranslate"><span class="pre">with_call2comp_impl()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="_backport_match.html">Backport Structural Pattern Matching</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="_backport_match.html#yeastr.backport_match.backport_match_helpers"><code class="docutils literal notranslate"><span class="pre">backport_match_helpers()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="_backport_match.html#yeastr.backport_match.backport_match_impl"><code class="docutils literal notranslate"><span class="pre">backport_match_impl()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="_backport_fstring_bs.html">Backport <code class="docutils literal notranslate"><span class="pre">f&quot;{'\n'}&quot;</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="_backport_fstring_bs.html#yeastr.backport_fstring_backslash.backport_fstring_backslash_inject"><code class="docutils literal notranslate"><span class="pre">backport_fstring_backslash_inject()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="_backport_fstring_bs.html#yeastr.backport_fstring_backslash.backport_fstring_backslash_impl"><code class="docutils literal notranslate"><span class="pre">backport_fstring_backslash_impl()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="_backport_dict_merge.html">Backport <code class="docutils literal notranslate"><span class="pre">|=</span></code> and <code class="docutils literal notranslate"><span class="pre">|</span></code> over dict</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="_backport_dict_merge.html#yeastr.backport_dict_ops.is_dict_annotation"><code class="docutils literal notranslate"><span class="pre">is_dict_annotation()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="_backport_dict_merge.html#yeastr.backport_dict_ops.is_dict_constructor"><code class="docutils literal notranslate"><span class="pre">is_dict_constructor()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="_backport_dict_merge.html#yeastr.backport_dict_ops.backport_dict_ops_impl"><code class="docutils literal notranslate"><span class="pre">backport_dict_ops_impl()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="_build_time_transformer.html">Build time transformer</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="_build_time_transformer.html#yeastr.build_time_transformer.get_macro_arguments"><code class="docutils literal notranslate"><span class="pre">get_macro_arguments()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="_build_time_transformer.html#yeastr.build_time_transformer.prepare_macro"><code class="docutils literal notranslate"><span class="pre">prepare_macro()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="_build_time_transformer.html#yeastr.build_time_transformer.def_macro_impl"><code class="docutils literal notranslate"><span class="pre">def_macro_impl()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="_build_time_transformer.html#yeastr.build_time_transformer.backporters"><code class="docutils literal notranslate"><span class="pre">backporters()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="_build_time_transformer.html#yeastr.build_time_transformer.additionally"><code class="docutils literal notranslate"><span class="pre">additionally()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="_build_time_transformer.html#yeastr.build_time_transformer.BuildTimeTransformer"><code class="docutils literal notranslate"><span class="pre">BuildTimeTransformer</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="_build_time_transformer.html#yeastr.build_time_transformer.BuildTimeTransformer.__init__"><code class="docutils literal notranslate"><span class="pre">BuildTimeTransformer.__init__()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="_build_time_transformer.html#yeastr.build_time_transformer.BuildTimeTransformer.yang"><code class="docutils literal notranslate"><span class="pre">BuildTimeTransformer.yang()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="_as_decorators.html">As Decorators</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="_as_decorators.html#yeastr.as_decorators.with_macros"><code class="docutils literal notranslate"><span class="pre">with_macros()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="_as_decorators.html#yeastr.as_decorators.with_namedloops"><code class="docutils literal notranslate"><span class="pre">with_namedloops()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="_as_decorators.html#yeastr.as_decorators.with_call2comp"><code class="docutils literal notranslate"><span class="pre">with_call2comp()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="_as_decorators.html#yeastr.as_decorators.backport_fstring_backslash"><code class="docutils literal notranslate"><span class="pre">backport_fstring_backslash()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="_as_decorators.html#yeastr.as_decorators.backport_match"><code class="docutils literal notranslate"><span class="pre">backport_match()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="_as_decorators.html#yeastr.as_decorators.backport_dict_ops"><code class="docutils literal notranslate"><span class="pre">backport_dict_ops()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="_import_hooks.html">Import Hooks</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="_import_hooks.html#yeastr.import_hooks.YeastrFileLoader"><code class="docutils literal notranslate"><span class="pre">YeastrFileLoader</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="_import_hooks.html#yeastr.import_hooks.YeastrFileLoader.cache_from_source"><code class="docutils literal notranslate"><span class="pre">YeastrFileLoader.cache_from_source()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="_import_hooks.html#yeastr.import_hooks.YeastrFileLoader._cache_bytecode"><code class="docutils literal notranslate"><span class="pre">YeastrFileLoader._cache_bytecode()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="_import_hooks.html#yeastr.import_hooks.YeastrFileLoader.source_to_code"><code class="docutils literal notranslate"><span class="pre">YeastrFileLoader.source_to_code()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="_import_hooks.html#yeastr.import_hooks.YeastrPathFinder"><code class="docutils literal notranslate"><span class="pre">YeastrPathFinder</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="_import_hooks.html#yeastr.import_hooks.YeastrPathFinder.path_importer_cache"><code class="docutils literal notranslate"><span class="pre">YeastrPathFinder.path_importer_cache</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="_import_hooks.html#yeastr.import_hooks.YeastrPathFinder._path_importer_cache"><code class="docutils literal notranslate"><span class="pre">YeastrPathFinder._path_importer_cache()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="_import_hooks.html#yeastr.import_hooks.YeastrPathFinder.invalidate_caches"><code class="docutils literal notranslate"><span class="pre">YeastrPathFinder.invalidate_caches()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="_import_hooks.html#yeastr.import_hooks.activate"><code class="docutils literal notranslate"><span class="pre">activate()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="_import_hooks.html#yeastr.import_hooks.deactivate"><code class="docutils literal notranslate"><span class="pre">deactivate()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="_interactive.html">REPL</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="_interactive.html#yeastr.interactive.YEASTR_DEBUG"><code class="docutils literal notranslate"><span class="pre">YEASTR_DEBUG</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="_interactive.html#yeastr.interactive.InteractiveColoredConsole"><code class="docutils literal notranslate"><span class="pre">InteractiveColoredConsole</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="_interactive.html#yeastr.interactive.InteractiveColoredConsole.runsource"><code class="docutils literal notranslate"><span class="pre">InteractiveColoredConsole.runsource()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="_interactive.html#yeastr.interactive.ReaderConsole"><code class="docutils literal notranslate"><span class="pre">ReaderConsole</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="_interactive.html#yeastr.interactive.ReaderConsole.execute"><code class="docutils literal notranslate"><span class="pre">ReaderConsole.execute()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">yeastr</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="features.html">Yeastr Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Yeastr Quickstart</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Internal Documentation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="_utils.html">Utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_shared.html">Shared</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_impl_macros.html">Macro Implementation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_impl_namedloops.html">Named Loops Implementation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_impl_call2comp.html">call2comp Implementation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_backport_match.html">Backport Structural Pattern Matching</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_backport_fstring_bs.html">Backport <code class="docutils literal notranslate"><span class="pre">f&quot;{'\n'}&quot;</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="_backport_dict_merge.html">Backport <code class="docutils literal notranslate"><span class="pre">|=</span></code> and <code class="docutils literal notranslate"><span class="pre">|</span></code> over dict</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_build_time_transformer.html">Build time transformer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_as_decorators.html">As Decorators</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_import_hooks.html">Import Hooks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_interactive.html">REPL</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="implementation_reference.html">Implementation Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="genindex.html">Index</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="quickstart.html" title="previous chapter">Yeastr Quickstart</a></li>
+      <li>Next: <a href="_utils.html" title="next chapter">Utils</a></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2025, CAST.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 8.2.3</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="_sources/internal_documentation.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
