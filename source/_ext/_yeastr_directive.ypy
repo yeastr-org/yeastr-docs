@@ -1,0 +1,226 @@
+import ast
+from yeastr.bootstrapped import *
+from docutils import nodes
+from docutils.statemachine import StringList
+from pathlib import Path
+from sphinx.util.docutils import SphinxDirective
+from sphinx.util.docutils import switch_source_input
+
+
+class FakeDocMoon:
+    def __init__(self, **kw):
+        for k, v in kw.items():
+            setattr(self, k, v)
+
+@def_macro(expr=True)
+def indent(offset):
+    """The indentation is already relative to moon, u can add a offset"""
+    " " * 4 * (moon.indentation + offset)
+
+@def_macro
+def gather_docstring():
+    try:
+        moon.docstring = ast.get_docstring(moon.node)
+    except TypeError:
+        ...
+
+import re
+
+def noroles(txt):
+    # TODO: backpatch
+    # TODO: this code breaks at the second directive
+    rst_role_re = re.compile(r'(.*):(\S*):`(.*)`(.*)')
+    if not (matched := rst_role_re.match(txt)):
+        return txt
+    return ''.join((matched.group(1), '``', matched.group(3), '``', matched.group(4)))
+
+@def_macro(expr=True)
+def process_moon_docstring(indent_offset, moon):
+    [f'{indent(indent_offset)}{noroles(chunk)}' for chunk in moon.docstring.split('\n')]
+
+
+@def_macro
+def include_moon_docstring(yr_indent_offset, yr_moon):
+    if moon.docstring:
+        buffers.extend(process_moon_docstring(indent_offset, moon))
+        buffers.append('')
+
+
+class YeastrDirective(SphinxDirective):
+    """Get documentation out of a yeastr file path relative to cwd"""
+    required_arguments = 1
+    option_spec = {
+        'module': str,  # TODO: validation
+        'members': bool,
+        'show-inheritance': bool,
+    }
+    def run(self) -> list[nodes.Node]:
+        rst_list = []
+        filepath = Path(self.arguments[0]).resolve()
+        with open(filepath, 'r') as filehandle:
+            source = filehandle.read()
+            module = ast.parse(source)
+        def moon_filter(moon):
+            moon.docstring = ''
+            moon.directive_override = ''
+            match moon.node.__class__:
+                case ast.Module:
+                    moon.directive = 'py:module'
+                    moon.name = self.options["module"]
+                    gather_docstring()
+                case ast.ClassDef:
+                    moon.directive = 'py:class'
+                    moon.name = moon.node.name
+                    moon.clsbases = [ast.unparse(base) for base in moon.node.bases]
+                    gather_docstring()
+                    if self.options['members']:
+                        moon.members = []  # naive uncomplete
+                        for node in moon.node.body:
+                            match node.__class__:
+                                case ast.Assign:
+                                    moon.members.extend([FakeDocMoon(
+                                        directive='py:attribute',
+                                        name=tgt.id,
+                                        value=ast.unparse(node.value),
+                                    ) for tgt in node.targets])
+                                case ast.AnnAssign:
+                                    tgt = node.target
+                                    moon.members.append(FakeDocMoon(
+                                        directive='py:attribute',
+                                        name=tgt.id,
+                                        value=ast.unparse(node.value),
+                                    ))
+                                case ast.ClassDef | ast.FunctionDef | ast.AsyncFunctionDef:
+                                    ...
+                                case _:
+                                    ...
+                case ast.FunctionDef | ast.AsyncFunctionDef:
+                    moon.directive = 'py:function'
+                    moon.name = moon.node.name
+                    moon.inner = []
+                    if moon.node.args:
+                        # print(ast.dump(moon.node.args))
+                        moon.fnargs = ast.unparse(moon.node.args)
+                    else:
+                        moon.fnargs = ''
+                    if moon.node.returns:
+                        # print(ast.dump(moon.node.returns))
+                        moon.retval = ast.unparse(moon.node.returns)
+                    else:
+                        moon.retval = ''
+                    moon.is_method = moon.up.__class__ == ast.ClassDef
+                    if moon.is_method:
+                        moon.directive_override = 'py:method'
+                    moon.is_macro = 'def_macro' in (  # TODO: should be a yam_ expression macro
+                        dec.func.id if dec_call else dec.id
+                        for dec in moon.node.decorator_list
+                        if ((dec_ := dec) and
+                            (dec_call :=
+                                isinstance(dec, ast.Call)
+                                and isinstance(dec.func, ast.Name))
+                            or isinstance(dec, ast.Name)
+                        )
+                    )
+                    moon.is_property = 'property' in (
+                        dec.id for dec in moon.node.decorator_list if dec.__class__ == ast.Name
+                    )
+                    if moon.is_property:
+                        moon.directive_override = 'py:property'
+                    gather_docstring()
+                    if (upper := moon.upper((ast.FunctionDef, ast.AsyncFunctionDef))):
+                        upper.inner.append(moon)
+                        return
+                case ast.Assign if moon.node in module.body:
+                    moon.directive = 'py:data'
+                    targets = [
+                        tgt for tgt in moon.node.targets
+                        if tgt.__class__ == ast.Name
+                    ]
+                    if len(targets) > 1:
+                        print(f'WARN: skipped {"\n".join((ast.unparse(t) for t in targets[1:]))} aliases')
+                    elif len(targets) == 1:
+                        moon.name = targets[0].id
+                    else:
+                        return
+                    moon.value = ast.unparse(moon.node.value)
+                case ast.AnnAssign if moon.node in module.body and moon.node.value.__class__ == ast.Name:
+                    moon.directive = 'py:data'
+                    moon.name = moon.node.target.id
+                    moon.value = ast.unparse(moon.node.value)
+                case _:
+                    return
+            if moon.directive == 'py:module':
+                moon.indentation = 0
+            else:
+                moon.indentation = 1
+                up = moon.up
+                while up:
+                    if up.node.__class__ in (ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef):
+                        moon.indentation += 1
+                    up = up.up
+            return moon
+        def moon_doc(moonwalker):
+            for moon in moonwalker.tree:
+                buffers = []
+                tmp = f'{indent(0)}.. {moon.directive_override or moon.directive}:: {moon.name}'
+                match moon.directive:
+                    case 'py:module':
+                        buffers.append(tmp)
+                        buffers.append('')
+                        include_moon_docstring(1, moon)
+                    case 'py:data':
+                        buffers.append(tmp)
+                        buffers.append(f'{indent(1)}:value: {moon.value}')
+                        buffers.append('')
+                    case 'py:function':
+                        if moon.is_property:
+                            buffers.append(tmp)
+                            buffers.append('')
+                        else:
+                            buffers.append(f'{tmp}({moon.fnargs}) -> {moon.retval}')
+                            buffers.append('')
+                            if moon.is_macro:
+                                buffers.append(f'{indent(1)}``IS A MACRO``')
+                                buffers.append('')
+                        include_moon_docstring(1, moon)
+                        if moon.inner:
+                            buffers.append(f'{indent(1)} Nested definitions')
+                            buffers.append('')
+                        for inner in moon.inner:
+                            inner_code = f'{inner.name}({inner.fnargs}) -> {moon.retval}'.strip()
+                            buffers.append(f'{indent(1)} :code:`{inner_code}`')
+                            buffers.append('')
+                            include_moon_docstring(2, inner)
+                    case 'py:class':
+                        buffers.append(tmp)
+                        buffers.append('')
+                        if moon.clsbases:
+                            buffers.append(f'{indent(1)}Bases: {",".join(moon.clsbases)}')
+                            buffers.append('')
+                        include_moon_docstring(1, moon)
+                        if self.options['members']:
+                            with For(member in moon.members) as membersloop:
+                                buffers.append(
+                                    f'{indent(1)}.. {member.directive}:: {member.name}'
+                                )
+                                buffers.append(f'{indent(2)} :value: {member.value}')
+                                buffers.append('')
+                            with membersloop.orempty:
+                                buffers.append(f'{indent(1)}``Has no members``')
+                                buffers.append('')
+
+
+                rst_list.extend(buffers)
+            #rst_list.insert(0, '')  # need a newline after py:module
+            #rst_list.insert(0, f'.. py:module:: {self.options["module"]}')
+        MoonWalking(module, filter_cb=moon_filter, before_reversing_cb=moon_doc)
+
+        #print('\n'.join(('-' * 80, *rst_list, '-' * 80)))  # DEBUG
+        pyrst_text = StringList(initlist=rst_list, parent=self)
+        with switch_source_input(self.state, self.arguments[0]):
+            # Switch source_input between parsing content.
+            # Inside this context, all parsing errors and warnings are reported as
+            # happened in new source_input
+            node = nodes.paragraph()
+            self.state.nested_parse(pyrst_text, 0, node)
+        return [node]

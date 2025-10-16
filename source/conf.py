@@ -15,7 +15,7 @@ import yeastr.import_hooks
 
 # REMEMBER TO ADD THEM TO implemetation_reference.rst
 for rstfile in ('bootstrapped', 'as_decorator', 'import_hooks', 'interactive', 'py39unparser', 'stabilize_ast_for_ci'):
-    path = __file__.replace('conf.py', rstfile + '.rst')
+    path = __file__.replace('conf.py', f'_{rstfile}.rst')
     with open(path, 'w') as out:
         out.write(f'''
 .. 

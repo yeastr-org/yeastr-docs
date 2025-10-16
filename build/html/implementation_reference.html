@@ -16,7 +16,7 @@
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="yeastr.bootstrapped" href="bootstrapped.html" />
+    <link rel="next" title="yeastr.bootstrapped" href="_bootstrapped.html" />
     <link rel="prev" title="REPL" href="_interactive.html" />
    
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
@@ -41,12 +41,39 @@
 <div class="toctree-wrapper compound">
 <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="bootstrapped.html">yeastr.bootstrapped</a></li>
-<li class="toctree-l1"><a class="reference internal" href="interactive.html">yeastr.interactive</a></li>
-<li class="toctree-l1"><a class="reference internal" href="import_hooks.html">yeastr.import_hooks</a></li>
-<li class="toctree-l1"><a class="reference internal" href="as_decorator.html">yeastr.as_decorator</a></li>
-<li class="toctree-l1"><a class="reference internal" href="py39unparser.html">yeastr.py39unparser</a></li>
-<li class="toctree-l1"><a class="reference internal" href="stabilize_ast_for_ci.html">yeastr.stabilize_ast_for_ci</a></li>
+<li class="toctree-l1"><a class="reference internal" href="_bootstrapped.html">yeastr.bootstrapped</a></li>
+<li class="toctree-l1"><a class="reference internal" href="_interactive.html">REPL</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="_interactive.html#yeastr.interactive.YEASTR_DEBUG"><code class="docutils literal notranslate"><span class="pre">YEASTR_DEBUG</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="_interactive.html#yeastr.interactive.InteractiveColoredConsole"><code class="docutils literal notranslate"><span class="pre">InteractiveColoredConsole</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="_interactive.html#yeastr.interactive.InteractiveColoredConsole.runsource"><code class="docutils literal notranslate"><span class="pre">InteractiveColoredConsole.runsource()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="_interactive.html#yeastr.interactive.ReaderConsole"><code class="docutils literal notranslate"><span class="pre">ReaderConsole</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="_interactive.html#yeastr.interactive.ReaderConsole.execute"><code class="docutils literal notranslate"><span class="pre">ReaderConsole.execute()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="_import_hooks.html">Import Hooks</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="_import_hooks.html#yeastr.import_hooks.YeastrFileLoader"><code class="docutils literal notranslate"><span class="pre">YeastrFileLoader</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="_import_hooks.html#yeastr.import_hooks.YeastrFileLoader.cache_from_source"><code class="docutils literal notranslate"><span class="pre">YeastrFileLoader.cache_from_source()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="_import_hooks.html#yeastr.import_hooks.YeastrFileLoader._cache_bytecode"><code class="docutils literal notranslate"><span class="pre">YeastrFileLoader._cache_bytecode()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="_import_hooks.html#yeastr.import_hooks.YeastrFileLoader.source_to_code"><code class="docutils literal notranslate"><span class="pre">YeastrFileLoader.source_to_code()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="_import_hooks.html#yeastr.import_hooks.YeastrPathFinder"><code class="docutils literal notranslate"><span class="pre">YeastrPathFinder</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="_import_hooks.html#yeastr.import_hooks.YeastrPathFinder.path_importer_cache"><code class="docutils literal notranslate"><span class="pre">YeastrPathFinder.path_importer_cache</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="_import_hooks.html#yeastr.import_hooks.YeastrPathFinder._path_importer_cache"><code class="docutils literal notranslate"><span class="pre">YeastrPathFinder._path_importer_cache()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="_import_hooks.html#yeastr.import_hooks.YeastrPathFinder.invalidate_caches"><code class="docutils literal notranslate"><span class="pre">YeastrPathFinder.invalidate_caches()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="_import_hooks.html#yeastr.import_hooks.activate"><code class="docutils literal notranslate"><span class="pre">activate()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="_import_hooks.html#yeastr.import_hooks.deactivate"><code class="docutils literal notranslate"><span class="pre">deactivate()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="_as_decorator.html">yeastr.as_decorator</a></li>
+<li class="toctree-l1"><a class="reference internal" href="_py39unparser.html">yeastr.py39unparser</a></li>
+<li class="toctree-l1"><a class="reference internal" href="_stabilize_ast_for_ci.html">yeastr.stabilize_ast_for_ci</a></li>
 </ul>
 </div>
 </section>
@@ -83,12 +110,12 @@
 <li class="toctree-l1"><a class="reference internal" href="quickstart.html">Yeastr Quickstart</a></li>
 <li class="toctree-l1"><a class="reference internal" href="internal_documentation.html">Internal Documentation</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Implementation Reference</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="bootstrapped.html">yeastr.bootstrapped</a></li>
-<li class="toctree-l2"><a class="reference internal" href="interactive.html">yeastr.interactive</a></li>
-<li class="toctree-l2"><a class="reference internal" href="import_hooks.html">yeastr.import_hooks</a></li>
-<li class="toctree-l2"><a class="reference internal" href="as_decorator.html">yeastr.as_decorator</a></li>
-<li class="toctree-l2"><a class="reference internal" href="py39unparser.html">yeastr.py39unparser</a></li>
-<li class="toctree-l2"><a class="reference internal" href="stabilize_ast_for_ci.html">yeastr.stabilize_ast_for_ci</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_bootstrapped.html">yeastr.bootstrapped</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_interactive.html">REPL</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_import_hooks.html">Import Hooks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_as_decorator.html">yeastr.as_decorator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_py39unparser.html">yeastr.py39unparser</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_stabilize_ast_for_ci.html">yeastr.stabilize_ast_for_ci</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="genindex.html">Index</a></li>
@@ -99,7 +126,7 @@
 <ul>
   <li><a href="index.html">Documentation overview</a><ul>
       <li>Previous: <a href="_interactive.html" title="previous chapter">REPL</a></li>
-      <li>Next: <a href="bootstrapped.html" title="next chapter">yeastr.bootstrapped</a></li>
+      <li>Next: <a href="_bootstrapped.html" title="next chapter">yeastr.bootstrapped</a></li>
   </ul></li>
 </ul>
 </div>

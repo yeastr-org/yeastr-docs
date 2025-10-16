@@ -409,7 +409,7 @@
     <span class="kn">from</span><span class="w"> </span><span class="nn">yeastr.bootstrapped</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
 
 <div class="viewcode-block" id="with_macros">
-<a class="viewcode-back" href="../../as_decorator.html#yeastr.as_decorator.with_macros">[docs]</a>
+<a class="viewcode-back" href="../../_as_decorator.html#yeastr.as_decorator.with_macros">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">with_macros</span><span class="p">(</span><span class="n">debug</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_with_macros</span><span class="p">(</span><span class="n">fn</span><span class="p">):</span>
@@ -717,7 +717,7 @@
 
 
 <div class="viewcode-block" id="with_namedloops">
-<a class="viewcode-back" href="../../as_decorator.html#yeastr.as_decorator.with_namedloops">[docs]</a>
+<a class="viewcode-back" href="../../_as_decorator.html#yeastr.as_decorator.with_namedloops">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">with_namedloops</span><span class="p">(</span><span class="n">debug</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_with_namedloops</span><span class="p">(</span><span class="n">fn</span><span class="p">):</span>
@@ -1062,7 +1062,7 @@
 
 
 <div class="viewcode-block" id="with_call2comp">
-<a class="viewcode-back" href="../../as_decorator.html#yeastr.as_decorator.with_call2comp">[docs]</a>
+<a class="viewcode-back" href="../../_as_decorator.html#yeastr.as_decorator.with_call2comp">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">with_call2comp</span><span class="p">(</span><span class="n">debug</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_with_call2comp</span><span class="p">(</span><span class="n">fn</span><span class="p">):</span>
@@ -1202,7 +1202,7 @@
 <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Proposal: Macro with_block=True</span><span class="se">\n</span><span class="s2">you call the macro inside a with,</span><span class="se">\n</span><span class="s2">and the macro yields the with block</span><span class="se">\n\n</span><span class="s2">@def_macro(with_block=True)</span><span class="se">\n</span><span class="s2">def backport_decorator(yr_version_required):</span><span class="se">\n</span><span class="s2">    if version_info &gt;= version_required:</span><span class="se">\n</span><span class="s2">        def _backporter(fn):</span><span class="se">\n</span><span class="s2">            prepare_source()</span><span class="se">\n</span><span class="s2">            yield _y_block</span><span class="se">\n</span><span class="s2">        return _backporter</span><span class="se">\n</span><span class="s2">    print(&#39;You need a newer python to backport&#39;, file=stderr)</span><span class="se">\n</span><span class="s2">    return lambda _fn: lambda *a, **kw: None</span><span class="se">\n\n</span><span class="s2">def backport_fstring_backslash(debug=False):</span><span class="se">\n</span><span class="s2">    with backport_decorator((3, 12)):</span><span class="se">\n</span><span class="s2">        backported_fstring = set()</span><span class="se">\n</span><span class="s2">        backport_fstring_backslash_impl(_fn)</span><span class="se">\n</span><span class="s2">        backport_fstring_backslash_inject(_fn)</span><span class="se">\n</span><span class="s2">        and_so_on()</span><span class="se">\n\n</span><span class="s2">def backport_match(debug=False, custom_globals=</span><span class="si">{}</span><span class="s2">):</span><span class="se">\n</span><span class="s2">    with backport_decorator((3, 10)):</span><span class="se">\n</span><span class="s2">        backport_match_impl(_fn)</span><span class="se">\n</span><span class="s2">        and_so_on(custom_globals=True)</span><span class="se">\n\n</span><span class="s2">def backport_dict_ops(debug=False):</span><span class="se">\n</span><span class="s2">    with backport_decorator((3, 9)):</span><span class="se">\n</span><span class="s2">        backport_dict_ops_impl(_fn)</span><span class="se">\n</span><span class="s2">        and_so_on()</span><span class="se">\n</span><span class="s2">&quot;</span>
 
 <div class="viewcode-block" id="backport_fstring_backslash">
-<a class="viewcode-back" href="../../as_decorator.html#yeastr.as_decorator.backport_fstring_backslash">[docs]</a>
+<a class="viewcode-back" href="../../_as_decorator.html#yeastr.as_decorator.backport_fstring_backslash">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">backport_fstring_backslash</span><span class="p">(</span><span class="n">debug</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
     <span class="k">if</span> <span class="n">version_info</span> <span class="o">&gt;=</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">12</span><span class="p">):</span>
 
@@ -1304,7 +1304,7 @@
 
 
 <div class="viewcode-block" id="backport_match">
-<a class="viewcode-back" href="../../as_decorator.html#yeastr.as_decorator.backport_match">[docs]</a>
+<a class="viewcode-back" href="../../_as_decorator.html#yeastr.as_decorator.backport_match">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">backport_match</span><span class="p">(</span><span class="n">debug</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">custom_globals</span><span class="o">=</span><span class="p">{}):</span>
     <span class="k">if</span> <span class="n">version_info</span> <span class="o">&gt;=</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">10</span><span class="p">):</span>
 
@@ -1456,7 +1456,7 @@
 
 
 <div class="viewcode-block" id="backport_dict_ops">
-<a class="viewcode-back" href="../../as_decorator.html#yeastr.as_decorator.backport_dict_ops">[docs]</a>
+<a class="viewcode-back" href="../../_as_decorator.html#yeastr.as_decorator.backport_dict_ops">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">backport_dict_ops</span><span class="p">(</span><span class="n">debug</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
     <span class="k">if</span> <span class="n">version_info</span> <span class="o">&gt;=</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">9</span><span class="p">):</span>
 

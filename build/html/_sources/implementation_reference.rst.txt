@@ -7,9 +7,9 @@ Docs auto-generated from sphinx autodoc
    :maxdepth: 0
    :caption: Contents:
 
-   bootstrapped
-   interactive
-   import_hooks
-   as_decorator
-   py39unparser
-   stabilize_ast_for_ci
+   _bootstrapped
+   _interactive
+   _import_hooks
+   _as_decorator
+   _py39unparser
+   _stabilize_ast_for_ci

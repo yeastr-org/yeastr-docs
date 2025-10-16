@@ -53,7 +53,7 @@
     <span class="kn">import</span><span class="w"> </span><span class="nn">yeastr.stabilize_ast_for_ci</span>
 
 <div class="viewcode-block" id="Moon">
-<a class="viewcode-back" href="../../import_hooks.html#yeastr.as_decorator.Moon">[docs]</a>
+<a class="viewcode-back" href="../../_bootstrapped.html#yeastr.as_decorator.Moon">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">Moon</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Yeastr&#39;s fundamental building block.</span>
 
@@ -113,13 +113,13 @@
         <span class="k">return</span> <span class="sa">f</span><span class="s1">&#39;&lt;Moon(</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">node</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">up</span><span class="si">!r}</span><span class="s1">.</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">up_field</span><span class="si">}</span><span class="s1">[</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">position</span><span class="si">}</span><span class="s1">])&gt;</span><span class="si">{</span><span class="n">ast</span><span class="o">.</span><span class="n">unparse</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">node</span><span class="p">)</span><span class="si">}</span><span class="s1">&lt;/&gt;&#39;</span>
 
 <div class="viewcode-block" id="Moon.recursive_repr">
-<a class="viewcode-back" href="../../import_hooks.html#yeastr.as_decorator.Moon.recursive_repr">[docs]</a>
+<a class="viewcode-back" href="../../_bootstrapped.html#yeastr.as_decorator.Moon.recursive_repr">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">recursive_repr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;&lt;Moon(</span><span class="si">{</span><span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">node</span><span class="p">)[</span><span class="mi">5</span><span class="p">:]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">) from [</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">position</span><span class="si">}</span><span class="s2">]</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">up_field</span><span class="si">}</span><span class="s2">. </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">up</span><span class="o">.</span><span class="n">recursive_repr</span><span class="p">()</span><span class="si">}</span><span class="s2">&gt;&quot;</span></div>
 
 
 <div class="viewcode-block" id="Moon.upper">
-<a class="viewcode-back" href="../../import_hooks.html#yeastr.as_decorator.Moon.upper">[docs]</a>
+<a class="viewcode-back" href="../../_bootstrapped.html#yeastr.as_decorator.Moon.upper">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">upper</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kind</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Find the closest upper Moon matching the kind provided</span>
 
@@ -134,7 +134,7 @@
 
 
 <div class="viewcode-block" id="Moon.replace">
-<a class="viewcode-back" href="../../import_hooks.html#yeastr.as_decorator.Moon.replace">[docs]</a>
+<a class="viewcode-back" href="../../_bootstrapped.html#yeastr.as_decorator.Moon.replace">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">replace</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Edits the ast.AST, in-place replacing moon.node with node&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">position</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -144,7 +144,7 @@
 
 
 <div class="viewcode-block" id="Moon.pop">
-<a class="viewcode-back" href="../../import_hooks.html#yeastr.as_decorator.Moon.pop">[docs]</a>
+<a class="viewcode-back" href="../../_bootstrapped.html#yeastr.as_decorator.Moon.pop">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">pop</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Edits the ast.AST, in-place removing moon.node&quot;&quot;&quot;</span>
         <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">position</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;weird pop?&#39;</span>
@@ -153,7 +153,7 @@
 
 
 <div class="viewcode-block" id="Moon.pop_extend">
-<a class="viewcode-back" href="../../import_hooks.html#yeastr.as_decorator.Moon.pop_extend">[docs]</a>
+<a class="viewcode-back" href="../../_bootstrapped.html#yeastr.as_decorator.Moon.pop_extend">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">pop_extend</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nodes</span><span class="p">,</span> <span class="n">filternone</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Edits the ast.AST, in-place removing moon.node and adding nodes</span>
 
@@ -175,7 +175,7 @@
 
 
 <div class="viewcode-block" id="Moon.prepend">
-<a class="viewcode-back" href="../../import_hooks.html#yeastr.as_decorator.Moon.prepend">[docs]</a>
+<a class="viewcode-back" href="../../_bootstrapped.html#yeastr.as_decorator.Moon.prepend">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">prepend</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Edits the ast.AST, in-place adding node before moon.node&quot;&quot;&quot;</span>
         <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">position</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;weird prepend?&#39;</span>
@@ -183,7 +183,7 @@
 
 
 <div class="viewcode-block" id="Moon.append">
-<a class="viewcode-back" href="../../import_hooks.html#yeastr.as_decorator.Moon.append">[docs]</a>
+<a class="viewcode-back" href="../../_bootstrapped.html#yeastr.as_decorator.Moon.append">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">append</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Edits the ast.AST, in-place adding node after moon.node&quot;&quot;&quot;</span>
         <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">position</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;weird append?&#39;</span>
@@ -192,7 +192,7 @@
 
 
 <div class="viewcode-block" id="MoonGrabber">
-<a class="viewcode-back" href="../../import_hooks.html#yeastr.as_decorator.MoonGrabber">[docs]</a>
+<a class="viewcode-back" href="../../_bootstrapped.html#yeastr.as_decorator.MoonGrabber">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">MoonGrabber</span><span class="p">(</span><span class="n">AbstractContextManager</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;To automatically free memory when something goes wrong.&quot;&quot;&quot;</span>
 
@@ -209,7 +209,7 @@
 
 
 <div class="viewcode-block" id="MoonWalking">
-<a class="viewcode-back" href="../../import_hooks.html#yeastr.as_decorator.MoonWalking">[docs]</a>
+<a class="viewcode-back" href="../../_bootstrapped.html#yeastr.as_decorator.MoonWalking">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">MoonWalking</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;AST traversal utility BURLA (Bottom-Up Right-to-Left and Again)</span>
 
@@ -297,7 +297,7 @@
 
 
 <div class="viewcode-block" id="ast_copy">
-<a class="viewcode-back" href="../../import_hooks.html#yeastr.as_decorator.ast_copy">[docs]</a>
+<a class="viewcode-back" href="../../_bootstrapped.html#yeastr.as_decorator.ast_copy">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">ast_copy</span><span class="p">(</span><span class="n">ast_node</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;deepcopy of :class:`ast.AST` tree, just faster&quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">ast_node</span><span class="o">.</span><span class="vm">__class__</span> <span class="o">==</span> <span class="nb">list</span><span class="p">:</span>
@@ -311,7 +311,7 @@
 
 
 <div class="viewcode-block" id="add_at_the_module_beginning">
-<a class="viewcode-back" href="../../import_hooks.html#yeastr.as_decorator.add_at_the_module_beginning">[docs]</a>
+<a class="viewcode-back" href="../../_bootstrapped.html#yeastr.as_decorator.add_at_the_module_beginning">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">add_at_the_module_beginning</span><span class="p">(</span><span class="n">ast_module</span><span class="p">,</span> <span class="n">ast_node</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Adds ast_node after module docstring and future imports&quot;&quot;&quot;</span>
     <span class="n">ymacro_ast_module</span> <span class="o">=</span> <span class="n">ast_module</span>
@@ -328,7 +328,7 @@
         <span class="n">ast_module</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
 
 <div class="viewcode-block" id="TransformError">
-<a class="viewcode-back" href="../../import_hooks.html#yeastr.as_decorator.TransformError">[docs]</a>
+<a class="viewcode-back" href="../../_bootstrapped.html#yeastr.as_decorator.TransformError">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">TransformError</span><span class="p">(</span><span class="ne">BaseException</span><span class="p">):</span>
     <span class="o">...</span></div>
 
@@ -337,7 +337,7 @@
 <span class="n">YMF_expr</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="mi">2</span>
 
 <div class="viewcode-block" id="def_macro">
-<a class="viewcode-back" href="../../import_hooks.html#yeastr.as_decorator.def_macro">[docs]</a>
+<a class="viewcode-back" href="../../_bootstrapped.html#yeastr.as_decorator.def_macro">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">def_macro</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">hygienic</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">mLang</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">expr</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;@def_macro() decorator for JIT macros only&quot;&quot;&quot;</span>
 
@@ -357,7 +357,7 @@
 
 
 <div class="viewcode-block" id="mLang_conv">
-<a class="viewcode-back" href="../../import_hooks.html#yeastr.as_decorator.mLang_conv">[docs]</a>
+<a class="viewcode-back" href="../../_bootstrapped.html#yeastr.as_decorator.mLang_conv">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">mLang_conv</span><span class="p">(</span><span class="n">_ast</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;JIT macro conversion step for mLang&quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">_ast</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">Constant</span><span class="p">):</span>
@@ -382,7 +382,7 @@
     <span class="kn">from</span><span class="w"> </span><span class="nn">secrets</span><span class="w"> </span><span class="kn">import</span> <span class="n">token_bytes</span> <span class="k">as</span> <span class="n">randbytes</span>
 
 <div class="viewcode-block" id="ymatch_as_seq">
-<a class="viewcode-back" href="../../import_hooks.html#yeastr.as_decorator.ymatch_as_seq">[docs]</a>
+<a class="viewcode-back" href="../../_bootstrapped.html#yeastr.as_decorator.ymatch_as_seq">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">ymatch_as_seq</span><span class="p">(</span><span class="n">obj</span><span class="p">):</span>
     <span class="k">if</span> <span class="n">obj</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="n">__flags__</span> <span class="o">&amp;</span> <span class="mi">32</span><span class="p">:</span>
         <span class="k">return</span> <span class="kc">True</span>
@@ -390,7 +390,7 @@
 
 
 <div class="viewcode-block" id="ymatch_as_map">
-<a class="viewcode-back" href="../../import_hooks.html#yeastr.as_decorator.ymatch_as_map">[docs]</a>
+<a class="viewcode-back" href="../../_bootstrapped.html#yeastr.as_decorator.ymatch_as_map">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">ymatch_as_map</span><span class="p">(</span><span class="n">obj</span><span class="p">):</span>
     <span class="k">if</span> <span class="n">obj</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="n">__flags__</span> <span class="o">&amp;</span> <span class="mi">64</span><span class="p">:</span>
         <span class="k">return</span> <span class="kc">True</span>
@@ -398,7 +398,7 @@
 
 
 <div class="viewcode-block" id="ymatch_positional_origin">
-<a class="viewcode-back" href="../../import_hooks.html#yeastr.as_decorator.ymatch_positional_origin">[docs]</a>
+<a class="viewcode-back" href="../../_bootstrapped.html#yeastr.as_decorator.ymatch_positional_origin">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">ymatch_positional_origin</span><span class="p">(</span><span class="n">obj</span><span class="p">):</span>
     <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="s1">&#39;__dataclass_fields__&#39;</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">obj</span><span class="o">.</span><span class="n">__dataclass_fields__</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
@@ -410,7 +410,7 @@
     <span class="k">return</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">x</span><span class="si">:</span><span class="s1">0x</span><span class="si">}</span><span class="s1">&#39;</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">randbytes</span><span class="p">(</span><span class="n">length</span> <span class="o">//</span> <span class="mi">2</span><span class="p">)])</span>
 
 <div class="viewcode-block" id="emap">
-<a class="viewcode-back" href="../../import_hooks.html#yeastr.as_decorator.emap">[docs]</a>
+<a class="viewcode-back" href="../../_bootstrapped.html#yeastr.as_decorator.emap">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">emap</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="n">_iter</span><span class="p">):</span>
     <span class="k">if</span> <span class="n">fn</span><span class="o">.</span><span class="vm">__code__</span><span class="o">.</span><span class="n">co_argcount</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
         <span class="k">return</span> <span class="p">[</span><span class="o">*</span><span class="nb">map</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="n">_iter</span><span class="p">)]</span>
@@ -419,7 +419,7 @@
 <span class="n">emapl</span> <span class="o">=</span> <span class="n">emap</span>
 
 <div class="viewcode-block" id="emaps">
-<a class="viewcode-back" href="../../import_hooks.html#yeastr.as_decorator.emaps">[docs]</a>
+<a class="viewcode-back" href="../../_bootstrapped.html#yeastr.as_decorator.emaps">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">emaps</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="n">_iter</span><span class="p">):</span>
     <span class="k">if</span> <span class="n">fn</span><span class="o">.</span><span class="vm">__code__</span><span class="o">.</span><span class="n">co_argcount</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
         <span class="k">return</span> <span class="nb">set</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="n">_iter</span><span class="p">))</span>
@@ -427,7 +427,7 @@
 
 
 <div class="viewcode-block" id="emapd">
-<a class="viewcode-back" href="../../import_hooks.html#yeastr.as_decorator.emapd">[docs]</a>
+<a class="viewcode-back" href="../../_bootstrapped.html#yeastr.as_decorator.emapd">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">emapd</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="n">_iter</span><span class="p">):</span>
     <span class="k">if</span> <span class="n">fn</span><span class="o">.</span><span class="vm">__code__</span><span class="o">.</span><span class="n">co_argcount</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
         <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="n">__iter</span><span class="p">))</span>
@@ -435,7 +435,7 @@
 
 
 <div class="viewcode-block" id="efilter">
-<a class="viewcode-back" href="../../import_hooks.html#yeastr.as_decorator.efilter">[docs]</a>
+<a class="viewcode-back" href="../../_bootstrapped.html#yeastr.as_decorator.efilter">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">efilter</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="n">_iter</span><span class="p">):</span>
     <span class="k">if</span> <span class="n">fn</span><span class="o">.</span><span class="vm">__code__</span><span class="o">.</span><span class="n">co_argcount</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
         <span class="k">return</span> <span class="p">[</span><span class="o">*</span><span class="nb">filter</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="n">_iter</span><span class="p">)]</span>
@@ -444,7 +444,7 @@
 <span class="n">efilterl</span> <span class="o">=</span> <span class="n">efilter</span>
 
 <div class="viewcode-block" id="efilters">
-<a class="viewcode-back" href="../../import_hooks.html#yeastr.as_decorator.efilters">[docs]</a>
+<a class="viewcode-back" href="../../_bootstrapped.html#yeastr.as_decorator.efilters">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">efilters</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="n">_iter</span><span class="p">):</span>
     <span class="k">if</span> <span class="n">fn</span><span class="o">.</span><span class="vm">__code__</span><span class="o">.</span><span class="n">co_argcount</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
         <span class="k">return</span> <span class="nb">set</span><span class="p">(</span><span class="nb">filter</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="n">_iter</span><span class="p">))</span>
@@ -452,7 +452,7 @@
 
 
 <div class="viewcode-block" id="efilterd">
-<a class="viewcode-back" href="../../import_hooks.html#yeastr.as_decorator.efilterd">[docs]</a>
+<a class="viewcode-back" href="../../_bootstrapped.html#yeastr.as_decorator.efilterd">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">efilterd</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="n">_iter</span><span class="p">):</span>
     <span class="k">if</span> <span class="n">fn</span><span class="o">.</span><span class="vm">__code__</span><span class="o">.</span><span class="n">co_argcount</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
         <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">filter</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="n">_iter</span><span class="p">))</span>
@@ -460,20 +460,20 @@
 
 
 <div class="viewcode-block" id="efiltermap">
-<a class="viewcode-back" href="../../import_hooks.html#yeastr.as_decorator.efiltermap">[docs]</a>
+<a class="viewcode-back" href="../../_bootstrapped.html#yeastr.as_decorator.efiltermap">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">efiltermap</span><span class="p">(</span><span class="n">_fil</span><span class="p">,</span> <span class="n">_map</span><span class="p">,</span> <span class="n">_iter</span><span class="p">):</span>
     <span class="k">return</span> <span class="p">[</span><span class="o">*</span><span class="nb">map</span><span class="p">(</span><span class="n">_map</span><span class="p">,</span> <span class="nb">filter</span><span class="p">(</span><span class="n">_fil</span><span class="p">,</span> <span class="n">_iter</span><span class="p">))]</span></div>
 
 <span class="n">efiltermapl</span> <span class="o">=</span> <span class="n">efiltermap</span>
 
 <div class="viewcode-block" id="efiltermaps">
-<a class="viewcode-back" href="../../import_hooks.html#yeastr.as_decorator.efiltermaps">[docs]</a>
+<a class="viewcode-back" href="../../_bootstrapped.html#yeastr.as_decorator.efiltermaps">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">efiltermaps</span><span class="p">(</span><span class="n">_fil</span><span class="p">,</span> <span class="n">_map</span><span class="p">,</span> <span class="n">_iter</span><span class="p">):</span>
     <span class="k">return</span> <span class="nb">set</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">_map</span><span class="p">,</span> <span class="nb">filter</span><span class="p">(</span><span class="n">_fil</span><span class="p">,</span> <span class="n">_iter</span><span class="p">)))</span></div>
 
 
 <div class="viewcode-block" id="efiltermapd">
-<a class="viewcode-back" href="../../import_hooks.html#yeastr.as_decorator.efiltermapd">[docs]</a>
+<a class="viewcode-back" href="../../_bootstrapped.html#yeastr.as_decorator.efiltermapd">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">efiltermapd</span><span class="p">(</span><span class="n">_fil</span><span class="p">,</span> <span class="n">_map</span><span class="p">,</span> <span class="n">_iter</span><span class="p">):</span>
     <span class="k">if</span> <span class="n">_fil</span><span class="o">.</span><span class="vm">__code__</span><span class="o">.</span><span class="n">co_argcount</span> <span class="o">!=</span> <span class="n">_map</span><span class="o">.</span><span class="vm">__code__</span><span class="o">.</span><span class="n">co_argcount</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;efiltermapd: arity mismatch&#39;</span><span class="p">)</span>
@@ -532,7 +532,7 @@
 
 <span class="c1"># Amalgamating from yeastr/impl_macros.pyy</span>
 <div class="viewcode-block" id="Macros">
-<a class="viewcode-back" href="../../import_hooks.html#yeastr.as_decorator.Macros">[docs]</a>
+<a class="viewcode-back" href="../../_bootstrapped.html#yeastr.as_decorator.Macros">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">Macros</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Contains all the macros&quot;&quot;&quot;</span>
 
@@ -540,7 +540,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_macros</span> <span class="o">=</span> <span class="p">{}</span>
 
 <div class="viewcode-block" id="Macros.add">
-<a class="viewcode-back" href="../../import_hooks.html#yeastr.as_decorator.Macros.add">[docs]</a>
+<a class="viewcode-back" href="../../_bootstrapped.html#yeastr.as_decorator.Macros.add">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">add</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fn</span><span class="p">,</span> <span class="n">flags</span><span class="p">,</span> <span class="n">_args</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;The actual @def_macro() decorator may call this</span>
 
@@ -574,7 +574,7 @@
 
 
 <div class="viewcode-block" id="Macros.add_ast">
-<a class="viewcode-back" href="../../import_hooks.html#yeastr.as_decorator.Macros.add_ast">[docs]</a>
+<a class="viewcode-back" href="../../_bootstrapped.html#yeastr.as_decorator.Macros.add_ast">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">add_ast</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fn</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">_ast</span><span class="p">,</span> <span class="n">flags</span><span class="p">,</span> <span class="n">_args</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;The usual @def_macro and @def_macro() may call this&quot;&quot;&quot;</span>
         <span class="n">bmacro</span> <span class="o">=</span> <span class="n">fn</span>
@@ -585,7 +585,7 @@
 
 
 <div class="viewcode-block" id="Macros.retrieve">
-<a class="viewcode-back" href="../../import_hooks.html#yeastr.as_decorator.Macros.retrieve">[docs]</a>
+<a class="viewcode-back" href="../../_bootstrapped.html#yeastr.as_decorator.Macros.retrieve">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">retrieve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ast_node</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        :param ast_node: of the macro to retrieve</span>
@@ -615,7 +615,7 @@
 <span class="n">_bfb_0a__</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span>
 
 <div class="viewcode-block" id="BuildTimeTransformer">
-<a class="viewcode-back" href="../../import_hooks.html#yeastr.as_decorator.BuildTimeTransformer">[docs]</a>
+<a class="viewcode-back" href="../../_bootstrapped.html#yeastr.as_decorator.BuildTimeTransformer">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">BuildTimeTransformer</span><span class="p">:</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_content</span><span class="p">,</span> <span class="n">pyver</span><span class="p">,</span> <span class="o">/</span><span class="p">,</span> <span class="n">autoimport</span><span class="o">=</span><span class="s1">&#39;minimal_runtime&#39;</span><span class="p">,</span> <span class="n">strip_module_docstring</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
@@ -645,7 +645,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">strip_module_docstring</span> <span class="o">=</span> <span class="n">strip_module_docstring</span>
 
 <div class="viewcode-block" id="BuildTimeTransformer.yang">
-<a class="viewcode-back" href="../../import_hooks.html#yeastr.as_decorator.BuildTimeTransformer.yang">[docs]</a>
+<a class="viewcode-back" href="../../_bootstrapped.html#yeastr.as_decorator.BuildTimeTransformer.yang">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">yang</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">macros</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Apply the transformations</span>
 
