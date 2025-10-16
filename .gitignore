@@ -4,4 +4,12 @@ build/doctrees/
 source/a_*.rst
 source/y_*.rst
 
+# probably unnecessary
+# don't commit docs/ in dev branch pls
+build/html/images/
+build/html/modules/
+build/html/sources/
+build/html/static/
+
+
 *.swp
