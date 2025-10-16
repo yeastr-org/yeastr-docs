@@ -1,6 +1,7 @@
 __pycache__
 
 build/doctrees/
-source/_*.rst
+source/a_*.rst
+source/y_*.rst
 
 *.swp

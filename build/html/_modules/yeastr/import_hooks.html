@@ -41,23 +41,23 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
 
 <div class="viewcode-block" id="YeastrFileLoader">
-<a class="viewcode-back" href="../../_import_hooks.html#yeastr.import_hooks.YeastrFileLoader">[docs]</a>
+<a class="viewcode-back" href="../../y_import_hooks.html#yeastr.import_hooks.YeastrFileLoader">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">YeastrFileLoader</span><span class="p">(</span><span class="n">SourceFileLoader</span><span class="p">):</span>
 
 <div class="viewcode-block" id="YeastrFileLoader.cache_from_source">
-<a class="viewcode-back" href="../../_import_hooks.html#yeastr.import_hooks.YeastrFileLoader.cache_from_source">[docs]</a>
+<a class="viewcode-back" href="../../y_import_hooks.html#yeastr.import_hooks.YeastrFileLoader.cache_from_source">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">cache_from_source</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;disables pyc cache&#39;</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="YeastrFileLoader._cache_bytecode">
-<a class="viewcode-back" href="../../_import_hooks.html#yeastr.import_hooks.YeastrFileLoader._cache_bytecode">[docs]</a>
+<a class="viewcode-back" href="../../y_import_hooks.html#yeastr.import_hooks.YeastrFileLoader._cache_bytecode">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">_cache_bytecode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source_path</span><span class="p">,</span> <span class="n">bytecode_path</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;disables pyc cache&#39;</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="YeastrFileLoader.source_to_code">
-<a class="viewcode-back" href="../../_import_hooks.html#yeastr.import_hooks.YeastrFileLoader.source_to_code">[docs]</a>
+<a class="viewcode-back" href="../../y_import_hooks.html#yeastr.import_hooks.YeastrFileLoader.source_to_code">[docs]</a>
     <span class="nd">@staticmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">source_to_code</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">_optimize</span><span class="o">=-</span><span class="mi">1</span><span class="p">):</span>
         <span class="n">pep425</span> <span class="o">=</span> <span class="s1">&#39;py313-none-any&#39;</span>
@@ -68,12 +68,12 @@
 
 
 <div class="viewcode-block" id="YeastrPathFinder">
-<a class="viewcode-back" href="../../_import_hooks.html#yeastr.import_hooks.YeastrPathFinder">[docs]</a>
+<a class="viewcode-back" href="../../y_import_hooks.html#yeastr.import_hooks.YeastrPathFinder">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">YeastrPathFinder</span><span class="p">(</span><span class="n">PathFinder</span><span class="p">):</span>
     <span class="n">path_importer_cache</span> <span class="o">=</span> <span class="p">{}</span>
 
 <div class="viewcode-block" id="YeastrPathFinder._path_importer_cache">
-<a class="viewcode-back" href="../../_import_hooks.html#yeastr.import_hooks.YeastrPathFinder._path_importer_cache">[docs]</a>
+<a class="viewcode-back" href="../../y_import_hooks.html#yeastr.import_hooks.YeastrPathFinder._path_importer_cache">[docs]</a>
     <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_path_importer_cache</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
         <span class="k">try</span><span class="p">:</span>
@@ -85,7 +85,7 @@
 
 
 <div class="viewcode-block" id="YeastrPathFinder.invalidate_caches">
-<a class="viewcode-back" href="../../_import_hooks.html#yeastr.import_hooks.YeastrPathFinder.invalidate_caches">[docs]</a>
+<a class="viewcode-back" href="../../y_import_hooks.html#yeastr.import_hooks.YeastrPathFinder.invalidate_caches">[docs]</a>
     <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">invalidate_caches</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
         <span class="n">yloopsf</span> <span class="o">=</span> <span class="mi">0</span>
@@ -96,14 +96,14 @@
 
 
 <div class="viewcode-block" id="activate">
-<a class="viewcode-back" href="../../_import_hooks.html#yeastr.import_hooks.activate">[docs]</a>
+<a class="viewcode-back" href="../../y_import_hooks.html#yeastr.import_hooks.activate">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">activate</span><span class="p">():</span>
     <span class="k">if</span> <span class="n">YeastrPathFinder</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">sys</span><span class="o">.</span><span class="n">meta_path</span><span class="p">:</span>
         <span class="n">sys</span><span class="o">.</span><span class="n">meta_path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">YeastrPathFinder</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="deactivate">
-<a class="viewcode-back" href="../../_import_hooks.html#yeastr.import_hooks.deactivate">[docs]</a>
+<a class="viewcode-back" href="../../y_import_hooks.html#yeastr.import_hooks.deactivate">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">deactivate</span><span class="p">():</span>
     <span class="k">if</span> <span class="n">YeastrPathFinder</span> <span class="ow">in</span> <span class="n">sys</span><span class="o">.</span><span class="n">meta_path</span><span class="p">:</span>
         <span class="n">sys</span><span class="o">.</span><span class="n">meta_path</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">YeastrPathFinder</span><span class="p">)</span></div>

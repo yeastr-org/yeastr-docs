@@ -15,7 +15,7 @@ import yeastr.import_hooks
 
 # REMEMBER TO ADD THEM TO implemetation_reference.rst
 for rstfile in ('bootstrapped', 'as_decorator', 'import_hooks', 'interactive', 'py39unparser', 'stabilize_ast_for_ci'):
-    path = __file__.replace('conf.py', f'_{rstfile}.rst')
+    path = __file__.replace('conf.py', f'a_{rstfile}.rst')
     with open(path, 'w') as out:
         out.write(f'''
 .. 
@@ -37,7 +37,7 @@ yrstfiles = [
     {
         'path': '../yeastr/yeastr/utils.py',
         'module': 'yeastr.utils',
-        'rstpath': '_utils.rst',
+        'rstpath': 'y_utils.rst',
         'title': 'Utils',
         'description': '',
         'members': True,
@@ -45,7 +45,7 @@ yrstfiles = [
     {
         'path': '../yeastr/yeastr/shared.ypy',
         'module': 'yeastr.shared',
-        'rstpath': '_shared.rst',
+        'rstpath': 'y_shared.rst',
         'title': 'Shared',
         'description': '',
         'members': True,
@@ -53,7 +53,7 @@ yrstfiles = [
     {
         'path': '../yeastr/yeastr/impl_macros.pyy',
         'module': 'yeastr.impl_macros',
-        'rstpath': '_impl_macros.rst',
+        'rstpath': 'y_impl_macros.rst',
         'title': 'Macro Implementation',
         'description': '',
         'members': True,
@@ -61,7 +61,7 @@ yrstfiles = [
     {
         'path': '../yeastr/yeastr/impl_namedloops.pyy',
         'module': 'yeastr.impl_namedloops',
-        'rstpath': '_impl_namedloops.rst',
+        'rstpath': 'y_impl_namedloops.rst',
         'title': 'Named Loops Implementation',
         'description': '',
         'members': True,
@@ -69,7 +69,7 @@ yrstfiles = [
     {
         'path': '../yeastr/yeastr/impl_call2comp.pyy',
         'module': 'yeastr.impl_call2comp',
-        'rstpath': '_impl_call2comp.rst',
+        'rstpath': 'y_impl_call2comp.rst',
         'title': 'call2comp Implementation',
         'description': '',
         'members': True,
@@ -77,7 +77,7 @@ yrstfiles = [
     {
         'path': '../yeastr/yeastr/backport_match.pyy',
         'module': 'yeastr.backport_match',
-        'rstpath': '_backport_match.rst',
+        'rstpath': 'y_backport_match.rst',
         'title': 'Backport Structural Pattern Matching',
         'description': '',
         'members': True,
@@ -85,7 +85,7 @@ yrstfiles = [
     {
         'path': '../yeastr/yeastr/backport_fstring_backslash.pyy',
         'module': 'yeastr.backport_fstring_backslash',
-        'rstpath': '_backport_fstring_bs.rst',
+        'rstpath': 'y_backport_fstring_bs.rst',
         'title': 'Backport ``f"{\'\\n\'}"``',
         'description': 'See PEP701',
         'members': True,
@@ -93,7 +93,7 @@ yrstfiles = [
     {
         'path': '../yeastr/yeastr/backport_dict_ops.pyy',
         'module': 'yeastr.backport_dict_ops',
-        'rstpath': '_backport_dict_merge.rst',
+        'rstpath': 'y_backport_dict_merge.rst',
         'title': 'Backport ``|=`` and ``|`` over dict',
         'description': 'PEP584, Really limited implementation',
         'members': True,
@@ -101,7 +101,7 @@ yrstfiles = [
     {
         'path': '../yeastr/yeastr/build_time_transformer.pyy',
         'module': 'yeastr.build_time_transformer',
-        'rstpath': '_build_time_transformer.rst',
+        'rstpath': 'y_build_time_transformer.rst',
         'title': 'Build time transformer',
         'description': 'Composition through the previously defined macros',
         'members': True,
@@ -109,7 +109,7 @@ yrstfiles = [
     {
         'path': '../yeastr/yeastr/as_decorators.pyy',
         'module': 'yeastr.as_decorators',
-        'rstpath': '_as_decorators.rst',
+        'rstpath': 'y_as_decorators.rst',
         'title': 'As Decorators',
         'description': 'An alternative usage of yeastr',
         'members': True,
@@ -117,7 +117,7 @@ yrstfiles = [
     {
         'path': '../yeastr/yeastr/import_hooks.pyy',
         'module': 'yeastr.import_hooks',
-        'rstpath': '_import_hooks.rst',
+        'rstpath': 'y_import_hooks.rst',
         'title': 'Import Hooks',
         'description': 'An alternative kinda interactive usage of yeastr',
         'members': True,
@@ -125,7 +125,7 @@ yrstfiles = [
     {
         'path': '../yeastr/yeastr/interactive.py',
         'module': 'yeastr.interactive',
-        'rstpath': '_interactive.rst',
+        'rstpath': 'y_interactive.rst',
         'title': 'REPL',
         'description': 'Interactive yeastr REPL',
         'members': True,
@@ -166,6 +166,7 @@ extensions = [
     'sphinx.ext.todo',
     'sphinx.ext.viewcode',
     'sphinx.ext.graphviz',
+    # 'sphinx.ext.githubpages',  # doesn't work
     'yeastr_quasiautodocs',
 ]
 

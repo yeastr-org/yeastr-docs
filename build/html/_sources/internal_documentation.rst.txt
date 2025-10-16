@@ -8,15 +8,15 @@ Docuentation gathered through AST inspection
    :maxdepth: 0
    :caption: Contents:
 
-   _utils
-   _shared
-   _impl_macros
-   _impl_namedloops
-   _impl_call2comp
-   _backport_match
-   _backport_fstring_bs
-   _backport_dict_merge
-   _build_time_transformer
-   _as_decorators
-   _import_hooks
-   _interactive
+   y_utils
+   y_shared
+   y_impl_macros
+   y_impl_namedloops
+   y_impl_call2comp
+   y_backport_match
+   y_backport_fstring_bs
+   y_backport_dict_merge
+   y_build_time_transformer
+   y_as_decorators
+   y_import_hooks
+   y_interactive
