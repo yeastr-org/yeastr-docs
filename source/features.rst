@@ -19,7 +19,7 @@ Yeastr helps backporting code to python3.8
 Macros
 ------
 
-`Explained here <_impl_macros.html>`__
+`Explained here <y_impl_macros.html>`__
 
 Named Loops
 -----------
@@ -40,9 +40,9 @@ The break/continue "keywords" are then implemented using a single integer bitfie
 Rationale
 """""""""
 
-- Why should one use the new loops syntax?
+- Why should one use the herein proposed loops syntax?
 
-Because it is meant to avoid the need of refactoring, it's a clear API.
+Because it is meant to avoid the need of refactoring, it's an expressive API.
 
 - What do you mean?
 
@@ -54,5 +54,5 @@ With yeastr, you start with a for and promote it to For when you need to, your n
 
 Please look at `examples <https://github.com/yeastr-org/yeastr-test-proj/blob/dev/src/yeastr_test/namedloops.pyy>`__ and their `output <https://github.com/yeastr-org/yeastr-test-proj/blob/dev/localci/out/script_namedloops_py38>`__
 
-and `our namedloops reference <_impl_namedloops.html>`__
+and `our namedloops reference <y_impl_namedloops.html>`__
 

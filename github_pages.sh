@@ -23,9 +23,9 @@ mv build/html/_images build/html/images
 
 mv build/html docs
 
-touch docs/.nojekyll
+echo 'To edit switch to the dev branch' > README.txt
 
-git add docs docs/.nojekyll
+git add docs
 git add -f docs/{static,modules,sources,images}
 git commit -m "pages"
 
