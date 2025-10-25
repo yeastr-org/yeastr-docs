@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Named Loops Implementation &#8212; yeastr 0.0.2 documentation</title>
+    <link rel="stylesheet" type="text/css" href="static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="static/graphviz.css?v=4ae1632d" />
+    <link rel="stylesheet" type="text/css" href="static/custom.css?v=c43d8ed7" />
+    <script src="static/documentation_options.js?v=e3a6060d"></script>
+    <script src="static/doctools.js?v=9bcbadda"></script>
+    <script src="static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="call2comp Implementation" href="y_impl_call2comp.html" />
+    <link rel="prev" title="Macro Implementation" href="y_impl_macros.html" />
+   
+  <link rel="stylesheet" href="static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="named-loops-implementation">
+<h1>Named Loops Implementation<a class="headerlink" href="#named-loops-implementation" title="Link to this heading">¶</a></h1>
+<p><span class="target" id="module-yeastr.impl_namedloops"></span><section id="example">
+<h2>Example<a class="headerlink" href="#example" title="Link to this heading">¶</a></h2>
+<p>Try this with <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">-m</span> <span class="pre">yeastr.interactive</span></code></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span><span class="k">with</span> <span class="n">For</span><span class="p">(</span><span class="n">chunk</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;asd&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;qwe&#39;</span><span class="p">])</span> <span class="k">as</span> <span class="n">chunkloop</span><span class="p">:</span>
+<span class="linenos">2</span>    <span class="k">with</span> <span class="n">For</span><span class="p">(</span><span class="n">ch</span> <span class="ow">in</span> <span class="n">chunk</span><span class="p">)</span> <span class="k">as</span> <span class="n">charloop</span><span class="p">:</span>
+<span class="linenos">3</span>        <span class="nb">print</span><span class="p">(</span><span class="n">ch</span><span class="p">,</span> <span class="n">charloop</span><span class="o">.</span><span class="n">it</span><span class="p">,</span> <span class="n">charloop</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+<span class="linenos">4</span>        <span class="k">if</span> <span class="n">ch</span> <span class="o">==</span> <span class="s1">&#39;w&#39;</span><span class="p">:</span>
+<span class="linenos">5</span>            <span class="n">chunkloop</span><span class="o">.</span><span class="n">Break</span>
+<span class="linenos">6</span>    <span class="k">with</span> <span class="n">charloop</span><span class="o">.</span><span class="n">orempty</span><span class="p">:</span>
+<span class="linenos">7</span>        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;charloop empty&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Gets transformed into:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="n">yloopsf</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="linenos"> 2</span><span class="k">for</span> <span class="n">_yfor_chunkloop_it</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;asd&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;qwe&#39;</span><span class="p">]:</span>
+<span class="linenos"> 3</span>    <span class="n">chunk</span> <span class="o">=</span> <span class="n">_yfor_chunkloop_it</span>
+<span class="linenos"> 4</span>    <span class="n">_yfor_charloop_isempty</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="linenos"> 5</span>    <span class="k">for</span> <span class="p">(</span><span class="n">_yfor_charloop_i</span><span class="p">,</span> <span class="n">_yfor_charloop_it</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">chunk</span><span class="p">):</span>
+<span class="linenos"> 6</span>        <span class="n">_yfor_charloop_isempty</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="linenos"> 7</span>        <span class="n">ch</span> <span class="o">=</span> <span class="n">_yfor_charloop_it</span>
+<span class="linenos"> 8</span>        <span class="nb">print</span><span class="p">(</span><span class="n">ch</span><span class="p">,</span> <span class="n">_yfor_charloop_it</span><span class="p">,</span> <span class="n">_yfor_charloop_i</span><span class="p">)</span>
+<span class="linenos"> 9</span>        <span class="k">if</span> <span class="n">ch</span> <span class="o">==</span> <span class="s1">&#39;w&#39;</span><span class="p">:</span>
+<span class="linenos">10</span>            <span class="n">yloopsf</span> <span class="o">=</span> <span class="mi">2</span>
+<span class="linenos">11</span>            <span class="k">break</span>
+<span class="linenos">12</span>    <span class="k">if</span> <span class="n">yloopsf</span> <span class="o">&amp;</span> <span class="mi">2</span><span class="p">:</span>
+<span class="linenos">13</span>        <span class="n">yloopsf</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="linenos">14</span>        <span class="k">break</span>
+<span class="linenos">15</span>    <span class="k">if</span> <span class="n">_yfor_charloop_isempty</span><span class="p">:</span>
+<span class="linenos">16</span>        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;charloop empty&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>And outputs:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">a</span> <span class="n">a</span> <span class="mi">0</span>
+<span class="n">s</span> <span class="n">s</span> <span class="mi">1</span>
+<span class="n">d</span> <span class="n">d</span> <span class="mi">2</span>
+<span class="n">charloop</span> <span class="n">empty</span>
+<span class="n">q</span> <span class="n">q</span> <span class="mi">0</span>
+<span class="n">w</span> <span class="n">w</span> <span class="mi">1</span>
+</pre></div>
+</div>
+</section>
+<section id="specification">
+<h2>Specification<a class="headerlink" href="#specification" title="Link to this heading">¶</a></h2>
+<p>We have <code class="docutils literal notranslate"><span class="pre">For</span></code> loops with:</p>
+<blockquote>
+<div><ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">loop_label.index</span></code> aka <code class="docutils literal notranslate"><span class="pre">loop_label.i</span></code></p>
+<p>By default you can’t mutate the index; but once you choose <code class="docutils literal notranslate"><span class="pre">recompute_end</span></code> you can</p>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">loop_label.item</span></code> aka <code class="docutils literal notranslate"><span class="pre">loop_label.it</span></code></p>
+<p>If you assign to <code class="docutils literal notranslate"><span class="pre">loop_label.it</span></code>, when you choose <code class="docutils literal notranslate"><span class="pre">recompute_end</span></code>, it gets mutated in-place over <code class="docutils literal notranslate"><span class="pre">loop_label.iter[loop_label.i]</span></code></p>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">recompute_end</span></code> makes your For be promoted to a while, taking care of what your iterable is.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">loop_label.Break</span></code> and <code class="docutils literal notranslate"><span class="pre">loop_label.Continue</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">with</span> <span class="pre">loop_label.orelse:</span> <span class="pre">...</span></code> the usual <code class="docutils literal notranslate"><span class="pre">for/else</span></code> python construct</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">with</span> <span class="pre">loop_label.orempty:</span> <span class="pre">...</span></code> An additional handy one (never recomputes to check, the above one is the worst scenario)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">enumerate()</span></code> is added automatically as soon as you start using <code class="docutils literal notranslate"><span class="pre">loop_label.index</span></code></p>
+<blockquote>
+<div><p>and should warn if you mutate it, and you should be able to silence the warning</p>
+</div></blockquote>
+</li>
+<li><p>There are two additional <code class="docutils literal notranslate"><span class="pre">start</span></code> and <code class="docutils literal notranslate"><span class="pre">end</span></code> parameters to <code class="docutils literal notranslate"><span class="pre">For</span></code></p></li>
+<li><p>It’s currently asserted that an indexed For index can’t be negative at the end of the loop</p></li>
+<li><p>If you are iterating some generator, choosing recompute_end leads to <cite>TypeError at runtime`</cite></p></li>
+<li><p>If you are going negative, don’t be surprised, index always grows up:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>reversed() can’t be used with recompute_end</p></li>
+<li><p>[::-1] is eager, your mutable slice is accessible through <code class="docutils literal notranslate"><span class="pre">loop_label.iter</span></code> within the loop’s parent scope</p></li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+</div></blockquote>
+<p>We have <code class="docutils literal notranslate"><span class="pre">While</span></code> loops with <code class="docutils literal notranslate"><span class="pre">.Break</span></code>, <code class="docutils literal notranslate"><span class="pre">.Continue</span></code>, <code class="docutils literal notranslate"><span class="pre">orelse</span></code></p>
+<div class="versionchanged">
+<p><span class="versionmodified changed">Changed in version 0.0.2: </span></p>
+<ul class="simple">
+<li><p>We had indexed=True, We kept forgetting about recompute_end, now you must make a choice if you meant indexed, so we remove indexed parameter.</p></li>
+<li><p>recompute_end bitmask was incorrect, no test reported it :O</p></li>
+</ul>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Newer languages such as <code class="docutils literal notranslate"><span class="pre">jai</span></code> provide <code class="docutils literal notranslate"><span class="pre">i</span></code> and <code class="docutils literal notranslate"><span class="pre">it</span></code> that refer to the current for loop index and item</p>
+<p>That language is not released yet, Myself doesn’t have a beta-access to try jai</p>
+<p>I have no idea whether you can mutate the index or not in jai.</p>
+<p>But that is the only language (I know about) with implicit names in loops.</p>
+</div>
+</section>
+<section id="how-does-that-work">
+<h2>How does that work?<a class="headerlink" href="#how-does-that-work" title="Link to this heading">¶</a></h2>
+<p>If the implementation is hard to explain, it’s a bad idea.</p>
+<p>We… linearly serach for attributes and loops… and function defs too</p>
+<p>We store a bunch of flags in moons to later decide on how to transform your code</p>
+<p>setting the flags require effort…</p>
+</section>
+<section id="reference">
+<h2>Reference<a class="headerlink" href="#reference" title="Link to this heading">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="yeastr.impl_namedloops.compute_current_depth">
+<span class="sig-prename descclassname"><span class="pre">yeastr.impl_namedloops.</span></span><span class="sig-name descname"><span class="pre">compute_current_depth</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#yeastr.impl_namedloops.compute_current_depth" title="Link to this definition">¶</a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">IS</span> <span class="pre">A</span> <span class="pre">MACRO</span></code></p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="yeastr.impl_namedloops.constant_to_bitfield">
+<span class="sig-prename descclassname"><span class="pre">yeastr.impl_namedloops.</span></span><span class="sig-name descname"><span class="pre">constant_to_bitfield</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">yr_flag</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">yr_mask</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#yeastr.impl_namedloops.constant_to_bitfield" title="Link to this definition">¶</a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">IS</span> <span class="pre">A</span> <span class="pre">MACRO</span></code></p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="yeastr.impl_namedloops.yloopsf_reset">
+<span class="sig-prename descclassname"><span class="pre">yeastr.impl_namedloops.</span></span><span class="sig-name descname"><span class="pre">yloopsf_reset</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#yeastr.impl_namedloops.yloopsf_reset" title="Link to this definition">¶</a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">IS</span> <span class="pre">A</span> <span class="pre">MACRO</span></code></p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="yeastr.impl_namedloops.yloopsf_set">
+<span class="sig-prename descclassname"><span class="pre">yeastr.impl_namedloops.</span></span><span class="sig-name descname"><span class="pre">yloopsf_set</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#yeastr.impl_namedloops.yloopsf_set" title="Link to this definition">¶</a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">IS</span> <span class="pre">A</span> <span class="pre">MACRO</span></code></p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="yeastr.impl_namedloops.with_namedloops_impl">
+<span class="sig-prename descclassname"><span class="pre">yeastr.impl_namedloops.</span></span><span class="sig-name descname"><span class="pre">with_namedloops_impl</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">yr_ast_tree</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#yeastr.impl_namedloops.with_namedloops_impl" title="Link to this definition">¶</a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">IS</span> <span class="pre">A</span> <span class="pre">MACRO</span></code></p>
+<blockquote>
+<div><p>Nested definitions</p>
+<p><code class="code docutils literal notranslate"><span class="pre">before_the_loop(moon)</span> <span class="pre">-&gt;</span></code></p>
+<p><code class="code docutils literal notranslate"><span class="pre">after_the_loop(moon)</span> <span class="pre">-&gt;</span></code></p>
+<p><code class="code docutils literal notranslate"><span class="pre">moon_filter(moon,</span> <span class="pre">moonwalker)</span> <span class="pre">-&gt;</span></code></p>
+</div></blockquote>
+</dd></dl>
+
+</section>
+</p>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">yeastr</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="features.html">Yeastr Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Yeastr Quickstart</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="internal_documentation.html">Internal Documentation</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="y_utils.html">Utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="y_shared.html">Shared</a></li>
+<li class="toctree-l2"><a class="reference internal" href="y_impl_macros.html">Macro Implementation</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Named Loops Implementation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="y_impl_call2comp.html">call2comp Implementation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="y_backport_match.html">Backport Structural Pattern Matching</a></li>
+<li class="toctree-l2"><a class="reference internal" href="y_backport_fstring_bs.html">Backport <code class="docutils literal notranslate"><span class="pre">f&quot;{'\n'}&quot;</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="y_backport_dict_merge.html">Backport <code class="docutils literal notranslate"><span class="pre">|=</span></code> and <code class="docutils literal notranslate"><span class="pre">|</span></code> over dict</a></li>
+<li class="toctree-l2"><a class="reference internal" href="y_build_time_transformer.html">Build time transformer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="y_yam.html">Ast Matchers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="y_as_decorators.html">As Decorators</a></li>
+<li class="toctree-l2"><a class="reference internal" href="y_import_hooks.html">Import Hooks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="y_interactive.html">REPL</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="implementation_reference.html">Implementation Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="genindex.html">Index</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  <li><a href="internal_documentation.html">Internal Documentation</a><ul>
+      <li>Previous: <a href="y_impl_macros.html" title="previous chapter">Macro Implementation</a></li>
+      <li>Next: <a href="y_impl_call2comp.html" title="next chapter">call2comp Implementation</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2025, CAST.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 8.2.3</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="sources/y_impl_namedloops.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

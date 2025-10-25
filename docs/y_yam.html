@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Ast Matchers &#8212; yeastr 0.0.2 documentation</title>
+    <link rel="stylesheet" type="text/css" href="static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="static/graphviz.css?v=4ae1632d" />
+    <link rel="stylesheet" type="text/css" href="static/custom.css?v=c43d8ed7" />
+    <script src="static/documentation_options.js?v=e3a6060d"></script>
+    <script src="static/doctools.js?v=9bcbadda"></script>
+    <script src="static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="As Decorators" href="y_as_decorators.html" />
+    <link rel="prev" title="Build time transformer" href="y_build_time_transformer.html" />
+   
+  <link rel="stylesheet" href="static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="ast-matchers">
+<h1>Ast Matchers<a class="headerlink" href="#ast-matchers" title="Link to this heading">¶</a></h1>
+<p><span class="target" id="module-yeastr.yam"></span><p>Yeastr Ast Match</p>
+<p>Predicates to test ast nodes</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Still unstable, “Adding as needed”. Expect changes</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Eventually changes would go into _vX suffix</p>
+</div>
+<dl class="py function">
+<dt class="sig sig-object py" id="yeastr.yam.yam_module_docstring">
+<span class="sig-prename descclassname"><span class="pre">yeastr.yam.</span></span><span class="sig-name descname"><span class="pre">yam_module_docstring</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ast_module</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#yeastr.yam.yam_module_docstring" title="Link to this definition">¶</a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">IS</span> <span class="pre">A</span> <span class="pre">MACRO</span></code></p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="yeastr.yam.yam_future_import">
+<span class="sig-prename descclassname"><span class="pre">yeastr.yam.</span></span><span class="sig-name descname"><span class="pre">yam_future_import</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ast_node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#yeastr.yam.yam_future_import" title="Link to this definition">¶</a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">IS</span> <span class="pre">A</span> <span class="pre">MACRO</span></code></p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="yeastr.yam.yam_expr_name">
+<span class="sig-prename descclassname"><span class="pre">yeastr.yam.</span></span><span class="sig-name descname"><span class="pre">yam_expr_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">as_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">as_str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#yeastr.yam.yam_expr_name" title="Link to this definition">¶</a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">IS</span> <span class="pre">A</span> <span class="pre">MACRO</span></code></p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="yeastr.yam.yam_name">
+<span class="sig-prename descclassname"><span class="pre">yeastr.yam.</span></span><span class="sig-name descname"><span class="pre">yam_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#yeastr.yam.yam_name" title="Link to this definition">¶</a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">IS</span> <span class="pre">A</span> <span class="pre">MACRO</span></code></p>
+<p>Yeastr Ast Match: expr predicate:</p>
+<p>Match a name regardless of context</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="yeastr.yam.yam_with_call_name">
+<span class="sig-prename descclassname"><span class="pre">yeastr.yam.</span></span><span class="sig-name descname"><span class="pre">yam_with_call_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">call</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#yeastr.yam.yam_with_call_name" title="Link to this definition">¶</a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">IS</span> <span class="pre">A</span> <span class="pre">MACRO</span></code></p>
+<p>Yeastr Ast Match: expr predicate:</p>
+<p>Example: <code class="docutils literal notranslate"><span class="pre">yam_with_call_name(ast_node,</span> <span class="pre">call,</span> <span class="pre">'mElse')</span></code></p>
+<p>Will match if ast_node would unparse like <code class="docutils literal notranslate"><span class="pre">with</span> <span class="pre">mElse():</span></code></p>
+<p>And, will bind a variable named ‘call’</p>
+<p>And another one called literally ‘what’ (you can grab <cite>as name</cite> from)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>node</strong> (<em>ast.AST</em>) – to test</p></li>
+<li><p><strong>call</strong> – a python name to be bound</p></li>
+<li><p><strong>name</strong> (<em>str</em>) – to test</p></li>
+</ul>
+</dd>
+<dt class="field-even">Type<span class="colon">:</span></dt>
+<dd class="field-even"><p>call: object</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="yeastr.yam.yam_call_name">
+<span class="sig-prename descclassname"><span class="pre">yeastr.yam.</span></span><span class="sig-name descname"><span class="pre">yam_call_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ast_node</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#yeastr.yam.yam_call_name" title="Link to this definition">¶</a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">IS</span> <span class="pre">A</span> <span class="pre">MACRO</span></code></p>
+<p>Yeastr Ast Match: expr predicate:</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ast_node</strong> (<em>ast.AST</em>) – to test</p></li>
+<li><p><strong>name</strong> (<em>str</em>) – name to match</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="yeastr.yam.yam_call_names">
+<span class="sig-prename descclassname"><span class="pre">yeastr.yam.</span></span><span class="sig-name descname"><span class="pre">yam_call_names</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ast_node</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">names</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bind_name_as</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bind_fn_as</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#yeastr.yam.yam_call_names" title="Link to this definition">¶</a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">IS</span> <span class="pre">A</span> <span class="pre">MACRO</span></code></p>
+<p>Yeastr Ast Match: expr predicate:</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>names</strong> (<em>Iterable</em><em>[</em><em>str</em><em>]</em>) – to search for</p></li>
+<li><p><strong>bind_name_as</strong> (<em>str</em>) – variable name where to store the function name</p></li>
+<li><p><strong>bind_fn_as</strong> (<em>ast.Call</em>) – variable name where to store the function itself</p></li>
+</ul>
+</dd>
+</dl>
+<div class="versionchanged">
+<p><span class="versionmodified changed">Changed in version 0.0.2: </span>Added bind_fn_as</p>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="yeastr.yam.yam_dict_constructor">
+<span class="sig-prename descclassname"><span class="pre">yeastr.yam.</span></span><span class="sig-name descname"><span class="pre">yam_dict_constructor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#yeastr.yam.yam_dict_constructor" title="Link to this definition">¶</a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">IS</span> <span class="pre">A</span> <span class="pre">MACRO</span></code></p>
+<p>Match calls to dict</p>
+</dd></dl>
+
+</p>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">yeastr</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="features.html">Yeastr Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Yeastr Quickstart</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="internal_documentation.html">Internal Documentation</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="y_utils.html">Utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="y_shared.html">Shared</a></li>
+<li class="toctree-l2"><a class="reference internal" href="y_impl_macros.html">Macro Implementation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="y_impl_namedloops.html">Named Loops Implementation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="y_impl_call2comp.html">call2comp Implementation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="y_backport_match.html">Backport Structural Pattern Matching</a></li>
+<li class="toctree-l2"><a class="reference internal" href="y_backport_fstring_bs.html">Backport <code class="docutils literal notranslate"><span class="pre">f&quot;{'\n'}&quot;</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="y_backport_dict_merge.html">Backport <code class="docutils literal notranslate"><span class="pre">|=</span></code> and <code class="docutils literal notranslate"><span class="pre">|</span></code> over dict</a></li>
+<li class="toctree-l2"><a class="reference internal" href="y_build_time_transformer.html">Build time transformer</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Ast Matchers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="y_as_decorators.html">As Decorators</a></li>
+<li class="toctree-l2"><a class="reference internal" href="y_import_hooks.html">Import Hooks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="y_interactive.html">REPL</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="implementation_reference.html">Implementation Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="genindex.html">Index</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  <li><a href="internal_documentation.html">Internal Documentation</a><ul>
+      <li>Previous: <a href="y_build_time_transformer.html" title="previous chapter">Build time transformer</a></li>
+      <li>Next: <a href="y_as_decorators.html" title="next chapter">As Decorators</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2025, CAST.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 8.2.3</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="sources/y_yam.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

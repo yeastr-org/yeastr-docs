@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Macro Implementation &#8212; yeastr 0.0.2 documentation</title>
+    <link rel="stylesheet" type="text/css" href="static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="static/graphviz.css?v=4ae1632d" />
+    <link rel="stylesheet" type="text/css" href="static/custom.css?v=c43d8ed7" />
+    <script src="static/documentation_options.js?v=e3a6060d"></script>
+    <script src="static/doctools.js?v=9bcbadda"></script>
+    <script src="static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Named Loops Implementation" href="y_impl_namedloops.html" />
+    <link rel="prev" title="Shared" href="y_shared.html" />
+   
+  <link rel="stylesheet" href="static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="macro-implementation">
+<h1>Macro Implementation<a class="headerlink" href="#macro-implementation" title="Link to this heading">¶</a></h1>
+<p><span class="target" id="module-yeastr.impl_macros"></span><section id="kinds-of-macros">
+<h2>Kinds Of Macros<a class="headerlink" href="#kinds-of-macros" title="Link to this heading">¶</a></h2>
+<section id="standard-one">
+<h3>Standard One<a class="headerlink" href="#standard-one" title="Link to this heading">¶</a></h3>
+<p>Macros must be expanded into ast.Expr, I mean statement.</p>
+<p>Params are assigned unless <code class="docutils literal notranslate"><span class="pre">yr_</span></code> prefixed. extra mangling if hygienic</p>
+</section>
+<section id="expr">
+<h3>Expr<a class="headerlink" href="#expr" title="Link to this heading">¶</a></h3>
+<p>Macros that can be expanded as part of an expression</p>
+</section>
+<section id="block">
+<h3>Block<a class="headerlink" href="#block" title="Link to this heading">¶</a></h3>
+<p>Macros that accept a block of code, when unexpanded look like a meaningless with statement</p>
+<p>UnImplemented Yet</p>
+</section>
+<section id="x-y-and-z-x-e-macros">
+<h3>X(Y) and Z(X, E) Macros<a class="headerlink" href="#x-y-and-z-x-e-macros" title="Link to this heading">¶</a></h3>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>experimental, without a clear use-case in mind</p>
+</div>
+<p>It’s all about preprocessing an X list of elements.</p>
+<p>See <a class="reference external" href="https://en.wikipedia.org/wiki/X_macro">Wikipedia about X Macros in C</a></p>
+<p>The C preprocessor operates on text, we don’t, so let’s see what can we do</p>
+<ul class="simple">
+<li><p>X macros: Define a list of names. each name on their own line</p></li>
+<li><p>Y macros: Expands like standard macro, the only parameter is the name of the current x item. Has:</p>
+<ul>
+<li><p>x_token: anywhere in a “str” such as function definitions</p></li>
+<li><p>x_quoted: gets replaced with “item”</p></li>
+<li><p>x: the item name (so something at runtime)</p></li>
+</ul>
+</li>
+</ul>
+<p>This is ok-ish (pretty limited) for templating, but you may also want to be able to create expressions</p>
+<ul class="simple">
+<li><p>Z macros: Skeletons packing the X macro, 1st arg is the name of the xmacro, 2nd is the name of the emacro.</p>
+<ul>
+<li><p>formal emacro gets replaced with actual emacro name</p></li>
+<li><p>xmacro gets relaced with a tuple of names</p></li>
+<li><p>xmacro_quoted gets replaced with a tuple of strings</p></li>
+</ul>
+</li>
+</ul>
+<p>Additionally you can X(len) that is useful for asserts</p>
+<div class="versionchanged">
+<p><span class="versionmodified changed">Changed in version 0.0.2: </span>Added X/Y/Z Macros</p>
+</div>
+<p>Plans for v0.0.3:</p>
+<ul class="simple">
+<li><p>maybe introduce a _content,</p></li>
+<li><p>maybe indexing?</p></li>
+</ul>
+</section>
+</section>
+<section id="parameters-specification">
+<h2>Parameters Specification<a class="headerlink" href="#parameters-specification" title="Link to this heading">¶</a></h2>
+<img alt="_images/macro_params.png" src="images/macro_params.png" />
+<p>Look at the <a class="reference external" href="https://github.com/yeastr-org/yeastr-test-proj/blob/dev/src/yeastr_test/macros.pyy">yeastr-test-proj repo for examples</a></p>
+<dl class="py class">
+<dt class="sig sig-object py" id="yeastr.impl_macros.Macros">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">yeastr.impl_macros.</span></span><span class="sig-name descname"><span class="pre">Macros</span></span><a class="headerlink" href="#yeastr.impl_macros.Macros" title="Link to this definition">¶</a></dt>
+<dd><p>Contains all the macros</p>
+<p><code class="docutils literal notranslate"><span class="pre">Has</span> <span class="pre">no</span> <span class="pre">members</span></code></p>
+<dl class="py function">
+<dt class="sig sig-object py" id="yeastr.impl_macros.Macros.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#yeastr.impl_macros.Macros.__init__" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="yeastr.impl_macros.Macros.add">
+<span class="sig-name descname"><span class="pre">add</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flags</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#yeastr.impl_macros.Macros.add" title="Link to this definition">¶</a></dt>
+<dd><p>The actual &#64;def_macro() decorator may call this</p>
+<p>Here fn is the decorated function that is inspected to get the source
+for the macro that gets added</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="yeastr.impl_macros.Macros.add_ast">
+<span class="sig-name descname"><span class="pre">add_ast</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_ast</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flags</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#yeastr.impl_macros.Macros.add_ast" title="Link to this definition">¶</a></dt>
+<dd><p>The usual &#64;def_macro and &#64;def_macro() may call this</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="yeastr.impl_macros.Macros.retrieve">
+<span class="sig-name descname"><span class="pre">retrieve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ast_node</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">required</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#yeastr.impl_macros.Macros.retrieve" title="Link to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ast_node</strong> (<em>ast.Name</em>) – of the macro to retrieve</p></li>
+<li><p><strong>required</strong> (<em>bool</em>) – raise when not found, dumping the name of all knowing macros, defaults to False</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A copy of the body of the macro as the last element of the returned tuple</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Tuple[str, Any, List[ast.AST]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="yeastr.impl_macros._macros">
+<span class="sig-prename descclassname"><span class="pre">yeastr.impl_macros.</span></span><span class="sig-name descname"><span class="pre">_macros</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">Macros()</span></em><a class="headerlink" href="#yeastr.impl_macros._macros" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="yeastr.impl_macros.mLang_evaluate_mIf">
+<span class="sig-prename descclassname"><span class="pre">yeastr.impl_macros.</span></span><span class="sig-name descname"><span class="pre">mLang_evaluate_mIf</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#yeastr.impl_macros.mLang_evaluate_mIf" title="Link to this definition">¶</a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">IS</span> <span class="pre">A</span> <span class="pre">MACRO</span></code></p>
+<p>Unparse and eval the test condition of an <code class="docutils literal notranslate"><span class="pre">mIf</span></code></p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="yeastr.impl_macros.perform_body">
+<span class="sig-prename descclassname"><span class="pre">yeastr.impl_macros.</span></span><span class="sig-name descname"><span class="pre">perform_body</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">yr_loop</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">yr_hint</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#yeastr.impl_macros.perform_body" title="Link to this definition">¶</a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">IS</span> <span class="pre">A</span> <span class="pre">MACRO</span></code></p>
+<p>Macro expansion body logics</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>loop</strong> (<em>there's no Loop type</em>) – a loop label</p></li>
+<li><p><strong>hint</strong> (<em>Any</em>) – debug parameter for unknown actions</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="yeastr.impl_macros.do_mLang">
+<span class="sig-prename descclassname"><span class="pre">yeastr.impl_macros.</span></span><span class="sig-name descname"><span class="pre">do_mLang</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#yeastr.impl_macros.do_mLang" title="Link to this definition">¶</a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">IS</span> <span class="pre">A</span> <span class="pre">MACRO</span></code></p>
+<p>Conditional macro expansion and maybe constexpr</p>
+<blockquote>
+<div><p>Nested definitions</p>
+<p><code class="code docutils literal notranslate"><span class="pre">perform(starting_node,</span> <span class="pre">next_node=None)</span> <span class="pre">-&gt;</span></code></p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="yeastr.impl_macros.macros_to_be_expanded">
+<span class="sig-prename descclassname"><span class="pre">yeastr.impl_macros.</span></span><span class="sig-name descname"><span class="pre">macros_to_be_expanded</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">_macros</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">yr_node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#yeastr.impl_macros.macros_to_be_expanded" title="Link to this definition">¶</a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">IS</span> <span class="pre">A</span> <span class="pre">MACRO</span></code></p>
+<p>Overwrites <code class="code docutils literal notranslate"><span class="pre">needs_expansion</span></code> and <code class="docutils literal notranslate"><span class="pre">retrieved</span></code></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>_macros</strong> (<a class="reference internal" href="#yeastr.impl_macros.Macros" title="yeastr.impl_macros.Macros"><em>Macros</em></a>) – the _macros singleton…</p></li>
+<li><p><strong>node</strong> (<em>ast.AST</em>) – check this node is a known macro call</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="yeastr.impl_macros.standard_macro_style_params_replacement">
+<span class="sig-prename descclassname"><span class="pre">yeastr.impl_macros.</span></span><span class="sig-name descname"><span class="pre">standard_macro_style_params_replacement</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#yeastr.impl_macros.standard_macro_style_params_replacement" title="Link to this definition">¶</a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">IS</span> <span class="pre">A</span> <span class="pre">MACRO</span></code></p>
+<blockquote>
+<div><p>Nested definitions</p>
+<p><code class="code docutils literal notranslate"><span class="pre">moon_filter(moon)</span> <span class="pre">-&gt;</span></code></p>
+<p><code class="code docutils literal notranslate"><span class="pre">moon_walk(moonwalker)</span> <span class="pre">-&gt;</span></code></p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="yeastr.impl_macros.expression_macro_style_params_replacement">
+<span class="sig-prename descclassname"><span class="pre">yeastr.impl_macros.</span></span><span class="sig-name descname"><span class="pre">expression_macro_style_params_replacement</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#yeastr.impl_macros.expression_macro_style_params_replacement" title="Link to this definition">¶</a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">IS</span> <span class="pre">A</span> <span class="pre">MACRO</span></code></p>
+<blockquote>
+<div><p>Nested definitions</p>
+<p><code class="code docutils literal notranslate"><span class="pre">moon_filter(moon)</span> <span class="pre">-&gt;</span></code></p>
+<p><code class="code docutils literal notranslate"><span class="pre">moon_walk(moonwalker)</span> <span class="pre">-&gt;</span></code></p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="yeastr.impl_macros.xy_macro_direct_expansion">
+<span class="sig-prename descclassname"><span class="pre">yeastr.impl_macros.</span></span><span class="sig-name descname"><span class="pre">xy_macro_direct_expansion</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#yeastr.impl_macros.xy_macro_direct_expansion" title="Link to this definition">¶</a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">IS</span> <span class="pre">A</span> <span class="pre">MACRO</span></code></p>
+<blockquote>
+<div><p>Nested definitions</p>
+<p><code class="code docutils literal notranslate"><span class="pre">moon_filter(moon)</span> <span class="pre">-&gt;</span></code></p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="yeastr.impl_macros.zx_macro_style_params_replacement">
+<span class="sig-prename descclassname"><span class="pre">yeastr.impl_macros.</span></span><span class="sig-name descname"><span class="pre">zx_macro_style_params_replacement</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#yeastr.impl_macros.zx_macro_style_params_replacement" title="Link to this definition">¶</a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">IS</span> <span class="pre">A</span> <span class="pre">MACRO</span></code></p>
+<blockquote>
+<div><p>Nested definitions</p>
+<p><code class="code docutils literal notranslate"><span class="pre">moon_filter(zmoon)</span> <span class="pre">-&gt;</span></code></p>
+<p><code class="code docutils literal notranslate"><span class="pre">moon_walk(moonwalker)</span> <span class="pre">-&gt;</span></code></p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="yeastr.impl_macros.expressionlike_macro_expansion">
+<span class="sig-prename descclassname"><span class="pre">yeastr.impl_macros.</span></span><span class="sig-name descname"><span class="pre">expressionlike_macro_expansion</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">yr_hint</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#yeastr.impl_macros.expressionlike_macro_expansion" title="Link to this definition">¶</a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">IS</span> <span class="pre">A</span> <span class="pre">MACRO</span></code></p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="yeastr.impl_macros.xy_macro_expansion">
+<span class="sig-prename descclassname"><span class="pre">yeastr.impl_macros.</span></span><span class="sig-name descname"><span class="pre">xy_macro_expansion</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#yeastr.impl_macros.xy_macro_expansion" title="Link to this definition">¶</a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">IS</span> <span class="pre">A</span> <span class="pre">MACRO</span></code></p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="yeastr.impl_macros.standard_macro_expansion">
+<span class="sig-prename descclassname"><span class="pre">yeastr.impl_macros.</span></span><span class="sig-name descname"><span class="pre">standard_macro_expansion</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#yeastr.impl_macros.standard_macro_expansion" title="Link to this definition">¶</a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">IS</span> <span class="pre">A</span> <span class="pre">MACRO</span></code></p>
+<blockquote>
+<div><p>Nested definitions</p>
+<p><code class="code docutils literal notranslate"><span class="pre">moon_filter(moon)</span> <span class="pre">-&gt;</span></code></p>
+<p><code class="code docutils literal notranslate"><span class="pre">moon_walk(moonwalker)</span> <span class="pre">-&gt;</span></code></p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="yeastr.impl_macros.with_macros_impl">
+<span class="sig-prename descclassname"><span class="pre">yeastr.impl_macros.</span></span><span class="sig-name descname"><span class="pre">with_macros_impl</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">_macros</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#yeastr.impl_macros.with_macros_impl" title="Link to this definition">¶</a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">IS</span> <span class="pre">A</span> <span class="pre">MACRO</span></code></p>
+<p>One round of macro expansion</p>
+<p>Expands all of the “currently visible” standard/expr macros</p>
+<p>Expands X(Y) macro</p>
+<p>Expands Z(X, W) macro into W(x) macros</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="yeastr.impl_macros.with_macros_impl_wrapper">
+<span class="sig-prename descclassname"><span class="pre">yeastr.impl_macros.</span></span><span class="sig-name descname"><span class="pre">with_macros_impl_wrapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">macros_</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">some_ast</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">never_defer</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#yeastr.impl_macros.with_macros_impl_wrapper" title="Link to this definition">¶</a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">IS</span> <span class="pre">A</span> <span class="pre">MACRO</span></code></p>
+<p>Entry Point, expands a bunch of macros grouped by depth</p>
+<blockquote>
+<div><p>Nested definitions</p>
+<p><code class="code docutils literal notranslate"><span class="pre">filter_macro_moons(moon)</span> <span class="pre">-&gt;</span></code></p>
+</div></blockquote>
+</dd></dl>
+
+</section>
+</p>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">yeastr</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="features.html">Yeastr Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Yeastr Quickstart</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="internal_documentation.html">Internal Documentation</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="y_utils.html">Utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="y_shared.html">Shared</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Macro Implementation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="y_impl_namedloops.html">Named Loops Implementation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="y_impl_call2comp.html">call2comp Implementation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="y_backport_match.html">Backport Structural Pattern Matching</a></li>
+<li class="toctree-l2"><a class="reference internal" href="y_backport_fstring_bs.html">Backport <code class="docutils literal notranslate"><span class="pre">f&quot;{'\n'}&quot;</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="y_backport_dict_merge.html">Backport <code class="docutils literal notranslate"><span class="pre">|=</span></code> and <code class="docutils literal notranslate"><span class="pre">|</span></code> over dict</a></li>
+<li class="toctree-l2"><a class="reference internal" href="y_build_time_transformer.html">Build time transformer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="y_yam.html">Ast Matchers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="y_as_decorators.html">As Decorators</a></li>
+<li class="toctree-l2"><a class="reference internal" href="y_import_hooks.html">Import Hooks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="y_interactive.html">REPL</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="implementation_reference.html">Implementation Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="genindex.html">Index</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  <li><a href="internal_documentation.html">Internal Documentation</a><ul>
+      <li>Previous: <a href="y_shared.html" title="previous chapter">Shared</a></li>
+      <li>Next: <a href="y_impl_namedloops.html" title="next chapter">Named Loops Implementation</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2025, CAST.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 8.2.3</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="sources/y_impl_macros.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
