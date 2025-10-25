@@ -17,6 +17,7 @@ Docuentation gathered through AST inspection
    y_backport_fstring_bs
    y_backport_dict_merge
    y_build_time_transformer
+   y_yam
    y_as_decorators
    y_import_hooks
    y_interactive

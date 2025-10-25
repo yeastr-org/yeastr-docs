@@ -107,6 +107,14 @@ yrstfiles = [
         'members': True,
     },
     {
+        'path': '../yeastr/yeastr/yam.ypy',
+        'module': 'yeastr.yam',
+        'rstpath': 'y_yam.rst',
+        'title': 'Ast Matchers',
+        'description': '',
+        'members': True,
+    },
+    {
         'path': '../yeastr/yeastr/as_decorators.pyy',
         'module': 'yeastr.as_decorators',
         'rstpath': 'y_as_decorators.rst',
